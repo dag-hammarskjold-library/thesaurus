@@ -1,0 +1,4 @@
+psycopg2==2.7.4
+rdflib==4.2.2
+rdflib-sqlalchemy==0.3.8
+SQLAlchemy==1.2.5
