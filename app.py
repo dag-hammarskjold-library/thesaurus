@@ -35,13 +35,7 @@ ROUTABLES = {
 
 @app.route('/')
 def index():
-    # per_page = 20
-    # page = request.args.get('page')
     lang = request.args.get('lang')
-    # search = False
-    # q = request.args.get('q')
-    # if q:
-    #     search = True
     if request.args.get('aspect'):
         aspect = request.args.get('aspect', None)
     else:
@@ -50,7 +44,6 @@ def index():
         aspect_uri = ROUTABLES[aspect]
     except KeyError:
         aspect_uri = ROUTABLES['MicroThesaurus']
-    # page = request.args.get(get_page_parameter(), type=int, default=20)
 
     results = []
     for res in graph.subjects(RDF.type, aspect_uri):
@@ -68,20 +61,9 @@ def index():
             'uri_anchor': uri_anchor,
             'pref_label': res_label})
 
-    # pagination = Pagination(
-    #     page=page,
-    #     per_page=per_page,
-    #     total=len(results),
-    #     search=search,
-    #     record_name='terms')
-
     sorted_results = sorted(results, key=lambda tup: tup['pref_label'])
 
     return render_template("index.html", context=sorted_results, lang=lang)
-    # ,
-    # pagination=pagination,
-    # page=page,
-    # per_page=per_page)
 
 
 @app.route('/term')

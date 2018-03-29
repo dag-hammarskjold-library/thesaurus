@@ -3,26 +3,18 @@
 {% block content %}
 
 <table class="table table-hover">
-  <thead>
-    <tr>
-        <th>term base url</th>
-        <th>term uri anchor </th>
-        <th>term</th>
-    </tr>
-  </thead>
   <tbody>
     {% for term in context %}
     <tr>
-        <td>{{ term.base_uri }}</td>
         <td> {{ term.uri_anchor }}</td>
         {% if lang %}
         <td>
-            <a href=http://localhost:5000/term?lang={{lang}}&base_uri={{ term.base_uri }}&uri_anchor={{ term.uri_anchor }}>
+            <a href=/term?lang={{lang}}&base_uri={{ term.base_uri }}&uri_anchor={{ term.uri_anchor }}>
             {{ term.pref_label }}
         </a></td>
         {% else %}
         <td>
-            <a href=http://localhost:5000/term?lang=en&base_uri={{ term.base_uri }}&uri_anchor={{ term.uri_anchor }}>
+            <a href=/term?lang=en&base_uri={{ term.base_uri }}&uri_anchor={{ term.uri_anchor }}>
             {{ term.pref_label }}
         </a></td>
         {% endif %}

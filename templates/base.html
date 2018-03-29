@@ -57,20 +57,20 @@
         </button>
         <!-- translate this and also make it change based on the app that's chosen -->
         {% if lang %}
-        <a class="navbar-brand" href="/?lang={{lang}}&aspect=ConceptScheme">UNBIS Thesaurus</a>
+        <a class="navbar-brand" href="/?lang={{lang}}&aspect=MicroThesaurus">UNBIS Thesaurus</a>
         {% else %}
-        <a class="navbar-brand" href="/?lang=en&aspect=ConceptScheme">UNBIS Thesaurus</a>
+        <a class="navbar-brand" href="/?lang=en&aspect=MicroThesaurus">UNBIS Thesaurus</a>
         {% endif %}
         <div class="collapse navbar-collapse" id="main-navbar">
         <ul class="nav navbar-nav">
         </ul>
         <ul class="nav navbar-nav pull-right">
-          <li ><a class="ar" href="/?lang=ar&aspect=ConceptScheme">ﺎﻠﻋﺮﺒﻳﺓ</a></li>
-          <li ><a class="zh" href="/?lang=zh&aspect=ConceptScheme">中文</a></li>
-          <li ><a class="en" href="/?lang=en&aspect=ConceptScheme">English</a></li>
-          <li ><a class="fr" href="/?lang=fr&aspect=ConceptScheme">Français</a></li>
-          <li ><a class="ru" href="/?lang=ru&aspect=ConceptScheme">Русский</a></li>
-          <li ><a class="es" href="/?lang=es&aspect=ConceptScheme">Español</a></li>
+          <li ><a class="ar" href="/?lang=ar&aspect=MicroThesaurus">ﺎﻠﻋﺮﺒﻳﺓ</a></li>
+          <li ><a class="zh" href="/?lang=zh&aspect=MicroThesaurus">中文</a></li>
+          <li ><a class="en" href="/?lang=en&aspect=MicroThesaurus">English</a></li>
+          <li ><a class="fr" href="/?lang=fr&aspect=MicroThesaurus">Français</a></li>
+          <li ><a class="ru" href="/?lang=ru&aspect=MicroThesaurus">Русский</a></li>
+          <li ><a class="es" href="/?lang=es&aspect=MicroThesaurus">Español</a></li>
         </ul>
       </div>
     </nav>
@@ -78,20 +78,12 @@
     <div class="container">
         <ul class="nav nav-tabs">
             {% if lang %}
-            <li role="presentation"><a href="/?aspect=Collection&lang={{lang}}">Browse Categories</a></li>
+            <li role="presentation"><a href="/?aspect=MicroThesaurus&lang={{lang}}">Browse Categories</a></li>
             {% else %}
-            <li role="presentation"><a href="/?aspect=Collection&lang=en">Browse Categories</a></li>
+            <li role="presentation"><a href="/?aspect=MicroThesaurus&lang=en">Browse Categories</a></li>
             {% endif %}
             <li role="presentation"><a href="#">Request a Copy</a></li>
-            {% if lang %}
-            <li role="presentation"><a href="/term?base_uri=http://lib-thesaurus.un.org/thesaurus/UNBISThesaurus&lang={{lang}}">
-            About
-            </a></li>
-            {% else %}
-            <li role="presentation"><a href="/term?base_uri=http://lib-thesaurus.un.org/thesaurus/UNBISThesaurus&lang=en">
-            About
-            </a></li>
-            {% endif %}
+            <li role="presentation"><a href="#">About</a></li>
         <form class="navbar-form navbar-right" role="search" method="get" action="/search/">
         <input type="text" class="form-control" id="q" name="q">
         <button type="submit" class="btn btn-default" value="Search">Search</button>

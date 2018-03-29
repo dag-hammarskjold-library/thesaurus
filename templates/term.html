@@ -16,16 +16,45 @@
   </div>
 </div>
 
-<p> Preferred Label :
+{% if scope_notes|length > 0 %}
+  <table class="table table-condensed">
+    {% for sn in scope_notes %}
+      <tr class="info">
+          <td style="border-top:none">SN</td><td style="border-top:none">{{ sn.value }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endif %}
+
+{% if alt_labels|length > 0 %}
+  <table class="table table-condensed">
+    {% for label in alt_labels %}
+      <tr>
+        <td style="border-top:none">UF</td>
+        <td style="border-top:none"><i>{{ label }}</i></td>                
+      </tr>
+    {% endfor %}
+  </table>
+{% endif %}
+
+<!-- <p> Preferred Label :
   {{ pref_label }}
 </p>
-
+ -->
 <div class="col-md-6">
   <table class="table table-condensed">
     {% for elem in relationships %}
     {% set uri_part = elem.uri.split('#') %}
     <tr>
-      <td style="border-top: none">{{elem.type}}</td>
+      {% if elem.type == 'broader' %}
+      <td style="border-top: none">BT</td>
+      {% elif elem.type == 'related' %}
+      <td style="border-top: none">RT</td>
+      {% elif elem.type == 'narrower' %}
+      <td style="border-top: none">NT</td>
+      {% elif elem.type == 'member' %}
+      <td style="border-top: none">Member</td>
+      {% endif %}
       {% if lang %}
       <td style="border-top: none"><a href="/term?lang={{lang}}&base_uri={{uri_part.0}}&uri_anchor={{uri_part.1}}">{{elem.pref_label}}</a></td>
       {% else %}
@@ -47,7 +76,7 @@
     <tr>
       <td style="border-top:none">
         {% if label.1.language %}
-          {% if label.1.language == LANGUAGE_CODE %}
+          {% if label.1.language == lang %}
             <b>{{ label.1.language|upper}}</b>
           {% else %}
             {{ label.1.language|upper}}
@@ -55,10 +84,10 @@
         {% endif %}
     </td>
     <td style="border-top:none">
-    {% if label.1.language and label.1.language == LANGUAGE_CODE %}
+    {% if label.1.language and label.1.language == lang %}
       <b>{{ label.1.value }}</b>
     {% else %}
-      {{ label.1.value }}
+      {{ label.1.value }} 
     {% endif %}
     </td>
   {% endfor %}
@@ -67,33 +96,15 @@
 </div>
 
 
-<p> alt labels
-  <ul>
-    {% for elem in alt_labels %}
-      <li>{{elem}}</li>
-    {% endfor %}
-  </ul>
-</p>
-
-
-<p> breadcrumbs
+<!-- <p> breadcrumbs
   <ul>
     {% for elem in breadcrumbs %}
       <li>{{elem}}</li>
     {% endfor %}
   </ul>
 </p>
-
-<p> scope notes
-  <ul>
-    {% for elem in scope_notes %}
-      <li>{{elem}}</li>
-    {% endfor %}
-  </ul>
-</p>
-
-
-
+ -->
+<!-- 
 <p> matches 
   <ul>
     {% for elem in matches %}
@@ -101,6 +112,6 @@
     {% endfor %}
   </ul>
 </p>
-
+ -->
 
 {% endblock %}
