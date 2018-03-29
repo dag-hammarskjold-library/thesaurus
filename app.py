@@ -1,20 +1,23 @@
 import re
 from rdflib import plugin, ConjunctiveGraph, Literal, Namespace, URIRef, RDF
 from rdflib.store import Store
-from rdflib.namespace import SKOS, OWL
+from rdflib.namespace import SKOS
 from rdflib_sqlalchemy import registerplugins
 from flask import Flask
 from flask import render_template, abort, request
 from config import DevelopmentConfig
-# from flask_paginate import Pagination, get_page_parameter
+from logging import getLogger
 
 registerplugins()
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
 
+logger = getLogger(__name__)
+
 identifier = URIRef(app.config.get('IDENTIFIER', None))
 db_uri = Literal(app.config.get('DB_URI'))
+per_page = app.config.get("per_page", 20)
 store = plugin.get("SQLAlchemy", Store)(identifier=identifier, configuration=db_uri)
 graph = ConjunctiveGraph(store)
 graph.open(db_uri, create=False)
@@ -44,22 +47,33 @@ def index():
         aspect_uri = ROUTABLES[aspect]
     except KeyError:
         aspect_uri = ROUTABLES['MicroThesaurus']
+    page = request.args.get('page')
+    if not page:
+        page = 1
 
     results = []
-    for res in graph.subjects(RDF.type, aspect_uri):
-        # r = Resource(graph, res)
-        res_label = get_preferred_label(res, lang)
-        base_uri = ''
-        uri_anchor = ''
-        m = re.search('#', res)
-        if m:
-            base_uri, uri_anchor = res.split('#')
-        else:
-            base_uri = res
-        results.append({
-            'base_uri': base_uri,
-            'uri_anchor': uri_anchor,
-            'pref_label': res_label})
+    q = """ SELECT ?subject
+            WHERE { ?subject rdf:type <%s> .} order by ?subject
+            LIMIT %s OFFSET %s""" % (str(aspect_uri), int(per_page), (int(page) - 1) * int(per_page))
+    # for res in graph.subjects(RDF.type, aspect_uri):
+    try:
+        for res in graph.query(q):
+            # r = Resource(graph, res)
+            res_label = get_preferred_label(res[0], lang)
+            base_uri = ''
+            uri_anchor = ''
+            m = re.search('#', res[0])
+            if m:
+                base_uri, uri_anchor = res[0].split('#')
+            else:
+                base_uri = res[0]
+            results.append({
+                'base_uri': base_uri,
+                'uri_anchor': uri_anchor,
+                'pref_label': res_label})
+    except Exception as e:
+        logger.error("Caught Fatal Exception : {} ".format(e))
+        abort(500)
 
     sorted_results = sorted(results, key=lambda tup: tup['pref_label'])
 
@@ -80,7 +94,17 @@ def term():
     pref_label = get_preferred_label(URIRef(uri), preferred_language)
     pref_labels = graph.preferredLabel(URIRef(uri))
     breadcrumbs = []
-    breadcrumbs_q = "prefix skos: <http://www.w3.org/2004/02/skos/core#> prefix unbist: <http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#> prefix eu: <http://eurovoc.europa.eu/schema#> select ?domain ?microthesaurus where { { ?domain skos:member ?microthesaurus . ?microthesaurus skos:member <" + uri + "> . } union { ?domain rdf:type eu:Domain . ?domain skos:member <" + uri + "> } . }"
+    breadcrumbs_q = """
+        prefix skos: <http://www.w3.org/2004/02/skos/core#>
+        prefix unbist: <http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#>
+        prefix eu: <http://eurovoc.europa.eu/schema#>
+        select ?domain ?microthesaurus where
+        {
+            {  ?domain skos:member ?microthesaurus . ?microthesaurus skos:member <%s> . }
+        union
+            { ?domain rdf:type eu:Domain . ?domain skos:member <%s> } .
+        }
+        """ % (uri, uri)
     for res in graph.query(breadcrumbs_q):
         bc = {}
         bc.update({'domain': {'uri': res.domain, 'pref_label': get_preferred_label(res.domain, preferred_language)}})
@@ -115,7 +139,10 @@ def term():
 
     matches = []
     # for t in [SKOS.relatedMatch, SKOS.broadMatch, SKOS.closeMatch, SKOS.exactMatch, SKOS.narrowMatch]:
-    #     matches_q = "select ?" + t.split('#')[1] + " where { <" + uri + "> owl:sameAs ?osa . ?" + t.split('#')[1] + " <" + t + "> ?osa }"
+    #     matches_q = """
+    # select ?" + t.split('#')[1] + " where { <" + uri + "> owl:sameAs ?osa . ?" + t.split('#')[1] +
+    # " <" + t + "> ?osa }"""
+
     #     for m in graph.query(matches_q):
     #         matches.append({'type': t.split('#')[1], 'uri': m})
 

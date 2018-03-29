@@ -14,7 +14,7 @@ class Config:
     IDENTIFIER = 'thesaurus'
 
     LANGUAGE_CODE = 'en'
-    PER_PAGE_PARAMETER = 20
+    per_page = 20
 
 
 class ProductionConfig(Config):
