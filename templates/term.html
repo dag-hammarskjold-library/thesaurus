@@ -2,21 +2,70 @@
 
 {% block content %}
 
-<p>
-  rdf types: {{ rdf_types }}
-</p>
+<div class="row">
+  <div class="col-md-12">
+    <h2>{{ pref_label.value }}
+      {% for t in rdf_types %}
+        {% if lang %}
+        <a href="/?lang={{lang}}&aspect={{ t.short_name }}"><span class="badge">{{ t.short_name }}</span></a>
+        {% else %}
+        <a href="/?lang=en&aspect={{ t.short_name }}"><span class="badge">{{ t.short_name }}</span></a>
+        {% endif %}
+      {% endfor %}
+    </h2>
+  </div>
+</div>
 
-<p> pref label :
+<p> Preferred Label :
   {{ pref_label }}
 </p>
 
-<p> pref labels:
-<ul>
-  {% for label in pref_labels %}
-    <li> {{label}}</li>
+<div class="col-md-6">
+  <table class="table table-condensed">
+    {% for elem in relationships %}
+    {% set uri_part = elem.uri.split('#') %}
+    <tr>
+      <td style="border-top: none">{{elem.type}}</td>
+      {% if lang %}
+      <td style="border-top: none"><a href="/term?lang={{lang}}&base_uri={{uri_part.0}}&uri_anchor={{uri_part.1}}">{{elem.pref_label}}</a></td>
+      {% else %}
+      <td style="border-top: none"><a href="/term?lang=en&base_uri={{uri_part.0}}&uri_anchor={{uri_part.1}}">
+        {{elem.pref_label}}
+      </a></td>
+      {% endif %} 
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+
+<div class="col-md-6">
+  <table class="table table-condensed">
+  <tr>
+    <th colspan="2" style="border-top:none">Language Equivalents</th></tr>
+    {% for label in pref_labels %}
+    <tr>
+      <td style="border-top:none">
+        {% if label.1.language %}
+          {% if label.1.language == LANGUAGE_CODE %}
+            <b>{{ label.1.language|upper}}</b>
+          {% else %}
+            {{ label.1.language|upper}}
+          {% endif %}
+        {% endif %}
+    </td>
+    <td style="border-top:none">
+    {% if label.1.language and label.1.language == LANGUAGE_CODE %}
+      <b>{{ label.1.value }}</b>
+    {% else %}
+      {{ label.1.value }}
+    {% endif %}
+    </td>
   {% endfor %}
-</ul>
-</p>
+  </tr>
+  </table>
+</div>
+
 
 <p> alt labels
   <ul>
@@ -43,13 +92,6 @@
   </ul>
 </p>
 
-<p> relationships
-  <ul>
-    {% for elem in relationships %}
-      <li>{{elem}}</li>
-    {% endfor %}
-  </ul>
-</p>
 
 
 <p> matches 

@@ -45,11 +45,11 @@ def index():
     if request.args.get('aspect'):
         aspect = request.args.get('aspect', None)
     else:
-        aspect = 'Collection'
+        aspect = 'MicroThesaurus'
     try:
         aspect_uri = ROUTABLES[aspect]
     except KeyError:
-        aspect_uri = ROUTABLES['Collection']
+        aspect_uri = ROUTABLES['MicroThesaurus']
     # page = request.args.get(get_page_parameter(), type=int, default=20)
 
     results = []
@@ -63,7 +63,10 @@ def index():
             base_uri, uri_anchor = res.split('#')
         else:
             base_uri = res
-        results.append({'base_uri': base_uri, 'uri_anchor': uri_anchor, 'pref_label': res_label})
+        results.append({
+            'base_uri': base_uri,
+            'uri_anchor': uri_anchor,
+            'pref_label': res_label})
 
     # pagination = Pagination(
     #     page=page,
@@ -74,7 +77,7 @@ def index():
 
     sorted_results = sorted(results, key=lambda tup: tup['pref_label'])
 
-    return render_template("index.html", context=sorted_results)
+    return render_template("index.html", context=sorted_results, lang=lang)
     # ,
     # pagination=pagination,
     # page=page,
@@ -146,7 +149,8 @@ def term():
         breadcrumbs=breadcrumbs,
         scope_notes=scope_notes,
         relationships=relationships,
-        matches=matches)
+        matches=matches,
+        lang=preferred_language)
 
 
 def get_preferred_label(resource, language):
