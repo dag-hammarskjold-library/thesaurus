@@ -1,10 +1,11 @@
 import re
+from math import ceil
 from rdflib import plugin, ConjunctiveGraph, Literal, Namespace, URIRef, RDF
 from rdflib.store import Store
 from rdflib.namespace import SKOS
 from rdflib_sqlalchemy import registerplugins
 from flask import Flask
-from flask import render_template, abort, request
+from flask import render_template, abort, request, url_for
 from config import DevelopmentConfig
 from logging import getLogger
 
@@ -17,7 +18,7 @@ logger = getLogger(__name__)
 
 identifier = URIRef(app.config.get('IDENTIFIER', None))
 db_uri = Literal(app.config.get('DB_URI'))
-per_page = app.config.get("per_page", 20)
+PER_PAGE = app.config.get("PER_PAGE", 20)
 store = plugin.get("SQLAlchemy", Store)(identifier=identifier, configuration=db_uri)
 graph = ConjunctiveGraph(store)
 graph.open(db_uri, create=False)
@@ -36,8 +37,42 @@ ROUTABLES = {
 }
 
 
-@app.route('/')
-def index():
+class Pagination(object):
+
+    def __init__(self, page, per_page, total_count):
+        self.page = page
+        self.per_page = per_page
+        self.total_count = total_count
+
+    @property
+    def pages(self):
+        return int(ceil(self.total_count / float(self.per_page)))
+
+    @property
+    def has_prev(self):
+        return self.page > 1
+
+    @property
+    def has_next(self):
+        return self.page < self.pages
+
+    def iter_pages(self, left_edge=2, left_current=2,
+                   right_current=5, right_edge=2):
+        last = 0
+        for num in range(1, self.pages + 1):
+            if num <= left_edge or \
+               (num > self.page - left_current - 1 and
+                num < self.page + right_current) or \
+               num > self.pages - right_edge:
+                if last + 1 != num:
+                    yield None
+                yield num
+                last = num
+
+
+@app.route('/', defaults={'page': 1})
+@app.route('/page/<int:page>')
+def index(page):
     lang = request.args.get('lang')
     if request.args.get('aspect'):
         aspect = request.args.get('aspect', None)
@@ -52,9 +87,17 @@ def index():
         page = 1
 
     results = []
+    count_q = """select (count(distinct ?subject) as ?count)
+                where { ?subject rdf:type <%s> .}
+    """ % str(aspect_uri)
+    count = 0
+    res = graph.query(count_q)
+    for r in res:
+        count = int(r[0])
+
     q = """ SELECT ?subject
             WHERE { ?subject rdf:type <%s> .} order by ?subject
-            LIMIT %s OFFSET %s""" % (str(aspect_uri), int(per_page), (int(page) - 1) * int(per_page))
+            LIMIT %s OFFSET %s""" % (str(aspect_uri), int(PER_PAGE), (int(page) - 1) * int(PER_PAGE))
     # for res in graph.subjects(RDF.type, aspect_uri):
     try:
         for res in graph.query(q):
@@ -76,8 +119,16 @@ def index():
         abort(500)
 
     sorted_results = sorted(results, key=lambda tup: tup['pref_label'])
+    pagination = Pagination(page, PER_PAGE, count)
 
-    return render_template("index.html", context=sorted_results, lang=lang)
+    return render_template("index.html", context=sorted_results, lang=lang, pagination=pagination)
+
+
+def url_for_other_page(page):
+    args = request.view_args.copy()
+    args['page'] = page
+    return url_for(request.endpoint, **args)
+app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 
 
 @app.route('/term')
@@ -138,13 +189,14 @@ def term():
             relationships.append(sr)
 
     matches = []
-    # for t in [SKOS.relatedMatch, SKOS.broadMatch, SKOS.closeMatch, SKOS.exactMatch, SKOS.narrowMatch]:
-    #     matches_q = """
-    # select ?" + t.split('#')[1] + " where { <" + uri + "> owl:sameAs ?osa . ?" + t.split('#')[1] +
-    # " <" + t + "> ?osa }"""
+    for t in [SKOS.relatedMatch, SKOS.broadMatch, SKOS.closeMatch, SKOS.exactMatch, SKOS.narrowMatch]:
+        matches_q = """ PREFIX owl: <http://www.w3.org/2002/07/owl#>
+            select ?%s where
+            { <%s> owl:sameAs ?osa . ?%s <%s> ?osa }""" % (
+                t.split('#')[1], uri, t.split('#')[1], t)
 
-    #     for m in graph.query(matches_q):
-    #         matches.append({'type': t.split('#')[1], 'uri': m})
+        for m in graph.query(matches_q):
+            matches.append({'type': t.split('#')[1], 'uri': m})
 
     rdf_types = []
     for t in graph.objects(subject=URIRef(uri), predicate=RDF.type):
