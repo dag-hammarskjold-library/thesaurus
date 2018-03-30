@@ -50,30 +50,34 @@ class Pagination(object):
 
     @property
     def has_prev(self):
-        return self.page > 1
+        return int(self.page) > 1
 
     @property
     def has_next(self):
-        return self.page < self.pages
+        return int(self.page) < int(self.pages)
 
     def iter_pages(self, left_edge=2, left_current=2,
                    right_current=5, right_edge=2):
         last = 0
         for num in range(1, self.pages + 1):
             if num <= left_edge or \
-               (num > self.page - left_current - 1 and
-                num < self.page + right_current) or \
-               num > self.pages - right_edge:
+               (num > int(self.page) - int(left_current) - 1 and
+                num < int(self.page) + int(right_current)) or \
+               num > int(self.pages) - int(right_edge):
                 if last + 1 != num:
                     yield None
                 yield num
                 last = num
 
 
-@app.route('/', defaults={'page': 1})
-@app.route('/page/<int:page>')
-def index(page):
+@app.route('/')
+def index():
+    page = request.args.get('page')
+    if not page:
+        page = 1
     lang = request.args.get('lang')
+    if not lang:
+        lang = 'en'
     if request.args.get('aspect'):
         aspect = request.args.get('aspect', None)
     else:
@@ -82,9 +86,6 @@ def index(page):
         aspect_uri = ROUTABLES[aspect]
     except KeyError:
         aspect_uri = ROUTABLES['MicroThesaurus']
-    page = request.args.get('page')
-    if not page:
-        page = 1
 
     results = []
     count_q = """select (count(distinct ?subject) as ?count)
@@ -114,6 +115,7 @@ def index(page):
                 'base_uri': base_uri,
                 'uri_anchor': uri_anchor,
                 'pref_label': res_label})
+
     except Exception as e:
         logger.error("Caught Fatal Exception : {} ".format(e))
         abort(500)
@@ -121,14 +123,19 @@ def index(page):
     sorted_results = sorted(results, key=lambda tup: tup['pref_label'])
     pagination = Pagination(page, PER_PAGE, count)
 
-    return render_template("index.html", context=sorted_results, lang=lang, pagination=pagination)
+    return render_template("index.html",
+        context=sorted_results,
+        lang=lang,
+        aspect=aspect,
+        page=page,
+        pagination=pagination)
 
 
-def url_for_other_page(page):
-    args = request.view_args.copy()
-    args['page'] = page
-    return url_for(request.endpoint, **args)
-app.jinja_env.globals['url_for_other_page'] = url_for_other_page
+# def url_for_index_page():
+#     args = request.view_args.copy()
+#     args['page'] = page
+#     return url_for(request.endpoint, **args)
+# app.jinja_env.globals['url_for_index_page'] = url_for_index_page
 
 
 @app.route('/term')

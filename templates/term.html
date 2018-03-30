@@ -95,16 +95,17 @@
   </table>
 </div>
 
-
-<!-- <p> breadcrumbs
+{% if breadcrumbs %}
+<p> breadcrumbs
   <ul>
     {% for elem in breadcrumbs %}
       <li>{{elem}}</li>
     {% endfor %}
   </ul>
 </p>
- -->
-<!-- 
+{% endif %}
+
+{% if matches %}
 <p> matches 
   <ul>
     {% for elem in matches %}
@@ -112,6 +113,6 @@
     {% endfor %}
   </ul>
 </p>
- -->
+{% endif %}
 
 {% endblock %}
