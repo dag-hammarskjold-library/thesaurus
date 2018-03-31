@@ -5,7 +5,7 @@ from rdflib.store import Store
 from rdflib.namespace import SKOS
 from rdflib_sqlalchemy import registerplugins
 from flask import Flask
-from flask import render_template, abort, request, url_for
+from flask import render_template, abort, request
 from config import DevelopmentConfig
 from logging import getLogger
 
@@ -96,14 +96,22 @@ def index():
     for r in res:
         count = int(r[0])
 
-    q = """ SELECT ?subject
-            WHERE { ?subject rdf:type <%s> .} order by ?subject
-            LIMIT %s OFFSET %s""" % (str(aspect_uri), int(PER_PAGE), (int(page) - 1) * int(PER_PAGE))
+    q = """
+        SELECT ?subject ?prefLabel
+        WHERE { ?subject rdf:type <%s> .
+        ?subject skos:prefLabel ?prefLabel .
+        FILTER (lang(?prefLabel) = '%s') }
+        order by ?prefLabel
+        LIMIT %s OFFSET %s""" % (str(aspect_uri), lang, int(PER_PAGE), (int(page) - 1) * int(PER_PAGE))
+
+    # q = """ SELECT ?subject
+    #         WHERE { ?subject rdf:type <%s> .} order by ?subject
+    #         LIMIT %s OFFSET %s""" % (str(aspect_uri), int(PER_PAGE), (int(page) - 1) * int(PER_PAGE))
     # for res in graph.subjects(RDF.type, aspect_uri):
     try:
         for res in graph.query(q):
             # r = Resource(graph, res)
-            res_label = get_preferred_label(res[0], lang)
+            res_label = res[1]
             base_uri = ''
             uri_anchor = ''
             m = re.search('#', res[0])
