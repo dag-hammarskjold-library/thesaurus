@@ -7,14 +7,16 @@ from rdflib_sqlalchemy import registerplugins
 from flask import Flask
 from flask import render_template, abort, request
 from config import DevelopmentConfig
-from logging import getLogger
+import logging
 
 registerplugins()
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 identifier = URIRef(app.config.get('IDENTIFIER', None))
 db_uri = Literal(app.config.get('DB_URI'))
@@ -28,7 +30,6 @@ graph.bind('skos', SKOS)
 EU = Namespace('http://eurovoc.europa.eu/schema#')
 UNBIST = Namespace('http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#')
 ROUTABLES = {
-    'Collection': SKOS.Collection,
     'Concept': SKOS.Concept,
     'ConceptScheme': SKOS.ConceptScheme,
     'Domain': EU.Domain,
@@ -89,7 +90,7 @@ def index():
 
     results = []
     count_q = """select (count(distinct ?subject) as ?count)
-                where { ?subject rdf:type <%s> .}
+                where { ?subject a <%s> .}
     """ % str(aspect_uri)
     count = 0
     res = graph.query(count_q)
@@ -98,16 +99,12 @@ def index():
 
     q = """
         SELECT ?subject ?prefLabel
-        WHERE { ?subject rdf:type <%s> .
+        WHERE { ?subject a <%s> .
         ?subject skos:prefLabel ?prefLabel .
         FILTER (lang(?prefLabel) = '%s') }
         order by ?prefLabel
         LIMIT %s OFFSET %s""" % (str(aspect_uri), lang, int(PER_PAGE), (int(page) - 1) * int(PER_PAGE))
 
-    # q = """ SELECT ?subject
-    #         WHERE { ?subject rdf:type <%s> .} order by ?subject
-    #         LIMIT %s OFFSET %s""" % (str(aspect_uri), int(PER_PAGE), (int(page) - 1) * int(PER_PAGE))
-    # for res in graph.subjects(RDF.type, aspect_uri):
     try:
         for res in graph.query(q):
             # r = Resource(graph, res)
@@ -137,13 +134,6 @@ def index():
         aspect=aspect,
         page=page,
         pagination=pagination)
-
-
-# def url_for_index_page():
-#     args = request.view_args.copy()
-#     args['page'] = page
-#     return url_for(request.endpoint, **args)
-# app.jinja_env.globals['url_for_index_page'] = url_for_index_page
 
 
 @app.route('/term')
