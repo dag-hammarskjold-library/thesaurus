@@ -12,9 +12,9 @@ class Config:
         db=POSTGRES_DB
     )
     IDENTIFIER = 'thesaurus'
-
     LANGUAGE_CODE = 'en'
     PER_PAGE = 20
+    ELASTICSEARCH_URI = "http://localhost:9200/"
 
 
 class ProductionConfig(Config):

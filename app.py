@@ -16,7 +16,7 @@ app.config.from_object(DevelopmentConfig)
 
 logger = logging.getLogger(__name__)
 logging.basicConfig()
-logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+# logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 identifier = URIRef(app.config.get('IDENTIFIER', None))
 db_uri = Literal(app.config.get('DB_URI'))
@@ -97,13 +97,12 @@ def index():
     for r in res:
         count = int(r[0])
 
-    q = """
-        SELECT ?subject ?prefLabel
-        WHERE { ?subject a <%s> .
-        ?subject skos:prefLabel ?prefLabel .
-        FILTER (lang(?prefLabel) = '%s') }
-        order by ?prefLabel
-        LIMIT %s OFFSET %s""" % (str(aspect_uri), lang, int(PER_PAGE), (int(page) - 1) * int(PER_PAGE))
+    q = """ select ?subject ?prefLabel
+            where { ?subject a <%s> .
+            ?subject skos:prefLabel ?prefLabel .
+            FILTER (lang(?prefLabel) = '%s') . }
+            order by ?prefLabel
+            LIMIT %s OFFSET %s""" % (str(aspect_uri), lang, int(PER_PAGE), (int(page) - 1) * int(PER_PAGE))
 
     try:
         for res in graph.query(q):
@@ -158,7 +157,7 @@ def term():
         {
             {  ?domain skos:member ?microthesaurus . ?microthesaurus skos:member <%s> . }
         union
-            { ?domain rdf:type eu:Domain . ?domain skos:member <%s> } .
+            { ?domain rdf:type eu:Domain . ?domain skos:member <%s> . }
         }
         """ % (uri, uri)
     for res in graph.query(breadcrumbs_q):
