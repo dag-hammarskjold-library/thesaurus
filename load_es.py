@@ -1,6 +1,6 @@
 import sys
-from urllib.request import Request
-from urllib.error import URLError
+# from urllib.request import Request, urlopen
+import requests
 import json
 from flask import Flask
 from config import DevelopmentConfig
@@ -43,42 +43,37 @@ thesaurus_index = {
     }
 }
 
-try:
-    Request("{}/thesaurus".format(elasticsearch_uri),
-        data=json.dumps(thesaurus_index),
-        method='PUT')
-except URLError as e:
-    print("error creating index: {}. Aborting".format(e))
-    sys.exit(-1)
+
+resp = requests.put("{}/thesaurus".format(elasticsearch_uri),
+    data=json.dumps(thesaurus_index),
+    headers={'Content-Type': 'application/json'})
+if not resp.status_code == 200:
+    print(resp.status_code)
+    print(resp.reason)
+    # print("error creating index: Aborting")
+    # sys.exit(-1)
 
 thesaurus_mapping = {
     "mappings": {
         "terms": {
             "properties": {
-                "scope_notes": {
-                    "type": "string"
-                },
-                "uri": {
-                    "type": "string"
-                },
-                "alt_labels": {
-                    "type": "string"
-                },
-                "labels": {
-                    "type": "string"
-                }
+                "scope_notes": {"type": "string"},
+                "uri": {"type": "string"},
+                "alt_labels": {"type": "string"},
+                "labels": {"type": "string"}
             }
         }
-
     }
 }
 
-try:
-    Request("{}/thesaurus/_mapping/_doc".format(elasticsearch_uri),
-        data=json.dumps(thesaurus_mapping),
-        method='PUT')
-except URLError as e:
-    print("error creating Mapping: {}. Aborting".format(e))
+resp = requests.put("{}/thesaurus".format(elasticsearch_uri),
+    data=json.dumps(thesaurus_mapping),
+    headers={'Content-Type': 'application/json'})
+
+if not resp.status_code == 200:
+    print(resp.status_code)
+    print(resp.reason)
+    print("error creating Mapping: Aborting")
     sys.exit(-1)
 
 i = 1
@@ -104,12 +99,11 @@ for uri in graph.query(querystring):
 
     payload = json.dumps(doc)
 
-    try:
-        Request("{}/thesaurus/_doc/{}".format(elasticsearch_uri, i),
+    resp = requests.put("{}/thesaurus".format(elasticsearch_uri),
             data=payload,
-            method='PUT')
-    except URLError as e:
-        print("Could not upload data: {}, {}.  Aborting".format(payload, e))
+            headers={'Content-Type': 'application/json'})
+    if not resp .status_code == 200:
+        print("Could not upload data.  Aborting")
         sys.exit(-1)
     if i % 50 == 0:
         print("{} documents indexed".format(i))
