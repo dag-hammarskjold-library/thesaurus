@@ -1,4 +1,6 @@
+import sys
 from urllib.request import Request
+from urllib.error import URLError
 import json
 from flask import Flask
 from config import DevelopmentConfig
@@ -27,13 +29,29 @@ elasticsearch_uri = app.config.get('ELASTICSEARCH_URI', None)
 EU = Namespace('http://eurovoc.europa.eu/schema#')
 UNBIST = Namespace('http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#')
 
-
 querystring = """prefix unbist: <http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#>
     select ?uri
     where
     { ?uri rdf:type skos:Concept filter not exists { ?uri rdf:type unbist:PlaceName } . }"""
 
+
 thesaurus_index = {
+    "settings": {
+        "index": {
+            "number_of_shards": 3
+        }
+    }
+}
+
+try:
+    Request("{}/thesaurus".format(elasticsearch_uri),
+        data=json.dumps(thesaurus_index),
+        method='PUT')
+except URLError as e:
+    print("error creating index: {}. Aborting".format(e))
+    sys.exit(-1)
+
+thesaurus_mapping = {
     "mappings": {
         "terms": {
             "properties": {
@@ -46,23 +64,22 @@ thesaurus_index = {
                 "alt_labels": {
                     "type": "string"
                 },
-                "alt_labels_orig": {
-                    "type": "string"
-                },
                 "labels": {
-                    "type": "string"
-                },
-                "labels_orig": {
                     "type": "string"
                 }
             }
         }
+
     }
 }
 
-Request("{}/thesaurus".format(elasticsearch_uri),
-    data=json.dumps(thesaurus_index),
-    method='PUT')
+try:
+    Request("{}/thesaurus/_mapping/_doc".format(elasticsearch_uri),
+        data=json.dumps(thesaurus_mapping),
+        method='PUT')
+except URLError as e:
+    print("error creating Mapping: {}. Aborting".format(e))
+    sys.exit(-1)
 
 i = 1
 
@@ -87,8 +104,12 @@ for uri in graph.query(querystring):
 
     payload = json.dumps(doc)
 
-    resp = Request("{}/thesaurus".format(elasticsearch_uri),
-        data=payload,
-        method='PUT')
-    if i % 20 == 0:
+    try:
+        Request("{}/thesaurus/_doc/{}".format(elasticsearch_uri, i),
+            data=payload,
+            method='PUT')
+    except URLError as e:
+        print("Could not upload data: {}, {}.  Aborting".format(payload, e))
+        sys.exit(-1)
+    if i % 50 == 0:
         print("{} documents indexed".format(i))
