@@ -15,6 +15,7 @@ class Config:
     LANGUAGE_CODE = 'en'
     PER_PAGE = 20
     ELASTICSEARCH_URI = "http://127.0.0.1:9200/"
+    INDEX_NAME = 'thesaurus'
 
 
 class ProductionConfig(Config):
