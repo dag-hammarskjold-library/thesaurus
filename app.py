@@ -7,6 +7,7 @@ from rdflib_sqlalchemy import registerplugins
 from flask import Flask
 from flask import render_template, abort, request
 from config import DevelopmentConfig
+from elasticsearch import Elasticsearch
 import logging
 
 registerplugins()
@@ -216,6 +217,35 @@ def term():
         relationships=relationships,
         matches=matches,
         lang=preferred_language)
+
+
+@app.route('/search')
+def search():
+    query = request.args.get('q', None)
+    if not query:
+        abort(500)
+    lang = request.args.get('lang')
+    if not lang:
+        lang = 'en'
+
+    elasticsearch_uri = app.config.get('ELASTICSEARCH_URI', None)
+    index_name = app.config.get('INDEX_NAME', None)
+    es = Elasticsearch(elasticsearch_uri)
+
+    match = es.search(index=index_name, q=query)
+    if len(match) == 0:
+        resp = ["No Matches"]
+        return render_template('search.html', results=resp)
+    resp = []
+    for m in match['hits']['hits']:
+        resp.append(
+            {'pref_label': get_preferred_label(
+                URIRef(m["_source"]["uri"]),
+                lang),
+            'uri': m["_source"]["uri"]}
+        )
+
+    return render_template('search.html', results=resp)
 
 
 def get_preferred_label(resource, language):
