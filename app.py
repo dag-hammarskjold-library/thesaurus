@@ -300,7 +300,8 @@ def get_concepts(page, lang):
 
     sorted_results = sorted(results, key=lambda tup: tup['pref_label'])
     pagination = Pagination(page, PER_PAGE, num_concepts)
-    response = sorted_results[int(page) - 1:int(page) + int(PER_PAGE)]
+    response = sorted_results[
+        (int(page) - 1) * int(PER_PAGE):(int(page) - 1) * int(PER_PAGE) + int(PER_PAGE)]
 
     return render_template("index.html",
         context=response,
