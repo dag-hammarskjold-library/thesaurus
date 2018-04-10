@@ -13,6 +13,19 @@
         {% endif %}
       {% endfor %}
     </h2>
+    
+    <ol class="breadcrumb">
+      {% for b in breadcrumbs %}
+      {% set uri_parts = b.domain.uri.split('#') %}
+        <li><a href="/term?lang={{lang}}&base_uri={{uri_parts.0}}&uri_anchor={{uri_parts.1}}">{{b.domain.pref_label}}</a></li>
+      {% if b.microthesaurus %}
+        {% set muri_parts = b.microthesaurus.uri.split('#') %}
+          <li><a href="/term?lang={{lang}}&base_uri={{ muri_parts.0 }}&uri_anchor={{ muri_parts.1}}">
+          {{ b.microthesaurus.pref_label }}</a></li>
+      {% endif %}
+      {% endfor %}
+    </ol>
+    
   </div>
 </div>
 
@@ -55,6 +68,7 @@
       {% elif elem.type == 'member' %}
       <td style="border-top: none">Member</td>
       {% endif %}
+
       {% if lang %}
       <td style="border-top: none"><a href="/term?lang={{lang}}&base_uri={{uri_part.0}}&uri_anchor={{uri_part.1}}">{{elem.pref_label}}</a></td>
       {% else %}
@@ -94,16 +108,6 @@
   </tr>
   </table>
 </div>
-
-{% if breadcrumbs %}
-<p> breadcrumbs
-  <ul>
-    {% for elem in breadcrumbs %}
-      <li>{{elem}}</li>
-    {% endfor %}
-  </ul>
-</p>
-{% endif %}
 
 {% if matches %}
 <p> matches 

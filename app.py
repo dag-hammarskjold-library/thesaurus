@@ -77,9 +77,9 @@ def index():
     page = request.args.get('page')
     if not page:
         page = 1
-    lang = request.args.get('lang')
-    if not lang:
-        lang = 'en'
+    preferred_language = request.args.get('lang')
+    if not preferred_language:
+        preferred_language = 'en'
     if request.args.get('aspect'):
         aspect = request.args.get('aspect', None)
     else:
@@ -98,12 +98,14 @@ def index():
     for r in res:
         count = int(r[0])
 
+    # FIXME: This query takes way too long
     q = """ select ?subject ?prefLabel
             where { ?subject a <%s> .
             ?subject skos:prefLabel ?prefLabel .
             FILTER (lang(?prefLabel) = '%s') . }
             order by ?prefLabel
-            LIMIT %s OFFSET %s""" % (str(aspect_uri), lang, int(PER_PAGE), (int(page) - 1) * int(PER_PAGE))
+            LIMIT %s OFFSET %s""" % (
+                str(aspect_uri), preferred_language, int(PER_PAGE), (int(page) - 1) * int(PER_PAGE))
 
     try:
         for res in graph.query(q):
@@ -130,7 +132,7 @@ def index():
 
     return render_template("index.html",
         context=sorted_results,
-        lang=lang,
+        lang=preferred_language,
         aspect=aspect,
         page=page,
         pagination=pagination)
@@ -142,6 +144,7 @@ def term():
     uri_anchor = request.args.get('uri_anchor')
     base_uri = request.args.get('base_uri')
     if not base_uri:
+        logger.error("Forgot to pass base uril to term view!")
         abort(404)
 
     uri = base_uri
@@ -151,16 +154,15 @@ def term():
     pref_labels = graph.preferredLabel(URIRef(uri))
     breadcrumbs = []
     breadcrumbs_q = """
-        prefix skos: <http://www.w3.org/2004/02/skos/core#>
-        prefix unbist: <http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#>
-        prefix eu: <http://eurovoc.europa.eu/schema#>
-        select ?domain ?microthesaurus where
-        {
-            {  ?domain skos:member ?microthesaurus . ?microthesaurus skos:member <%s> . }
-        union
-            { ?domain rdf:type eu:Domain . ?domain skos:member <%s> . }
-        }
-        """ % (uri, uri)
+            prefix skos: <http://www.w3.org/2004/02/skos/core#>
+            prefix eu: <http://eurovoc.europa.eu/schema#>
+            select ?domain ?microthesaurus where
+            {
+                {  ?domain skos:hasTopConcept ?microthesaurus . ?microthesaurus skos:narrower <%s> . }
+            union
+                { ?domain rdf:type eu:Domain . ?domain skos:hasTopConcept <%s> . }
+            }
+            """ % (uri, uri)
     for res in graph.query(breadcrumbs_q):
         bc = {}
         bc.update({'domain': {'uri': res.domain, 'pref_label': get_preferred_label(res.domain, preferred_language)}})
@@ -223,10 +225,11 @@ def term():
 def search():
     query = request.args.get('q', None)
     if not query:
+        logging.error("Forgot to pass query to search view!")
         abort(500)
-    lang = request.args.get('lang')
-    if not lang:
-        lang = 'en'
+    preferred_language = request.args.get('lang')
+    if not preferred_language:
+        preferred_language = 'en'
 
     elasticsearch_uri = app.config.get('ELASTICSEARCH_URI', None)
     index_name = app.config.get('INDEX_NAME', None)
@@ -238,14 +241,14 @@ def search():
         return render_template('search.html', results=resp)
     resp = []
     for m in match['hits']['hits']:
-        resp.append(
-            {'pref_label': get_preferred_label(
-                URIRef(m["_source"]["uri"]),
-                lang),
-            'uri': m["_source"]["uri"]}
+        resp.append({
+            # 'score': m['_score'],
+            'pref_label': get_preferred_label(URIRef(m["_source"]["uri"]), preferred_language),
+            'uri': m["_source"]["uri"],
+        }
         )
 
-    return render_template('search.html', results=resp)
+    return render_template('search.html', results=resp, lang=preferred_language)
 
 
 def get_preferred_label(resource, language):

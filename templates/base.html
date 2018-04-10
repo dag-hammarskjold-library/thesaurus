@@ -84,9 +84,13 @@
             {% endif %}
             <li role="presentation"><a href="#">Request a Copy</a></li>
             <li role="presentation"><a href="#">About</a></li>
-        <form class="navbar-form navbar-right" role="search" method="get" action="/search/">
+        <form class="navbar-form navbar-right" role="search" method="get" action="/search">
         <input type="text" class="form-control" id="q" name="q">
+        {% if lang %}
+        <input type="hidden"><a href="/?aspect=MicroThesaurus&lang={{lang}}">Browse Categories</a></li>
+        {% else %}
         <button type="submit" class="btn btn-default" value="Search">Search</button>
+        {% endif %}
         </form>
         </ul>
     {% block content %}

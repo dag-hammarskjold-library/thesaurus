@@ -1,5 +1,3 @@
-import sys
-# from urllib.request import Request, urlopen
 import json
 from flask import Flask
 from config import DevelopmentConfig
