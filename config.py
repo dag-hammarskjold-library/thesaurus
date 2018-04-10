@@ -16,6 +16,9 @@ class Config:
     PER_PAGE = 20
     ELASTICSEARCH_URI = "http://127.0.0.1:9200/"
     INDEX_NAME = 'thesaurus'
+    REDIS_HOST = 'localhost'
+    REDIS_PORT = "6379"
+    REDIS_DB = 0
 
 
 class ProductionConfig(Config):

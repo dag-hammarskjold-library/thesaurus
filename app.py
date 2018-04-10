@@ -1,3 +1,5 @@
+import json
+from redis import StrictRedis
 import re
 from math import ceil
 from rdflib import plugin, ConjunctiveGraph, Literal, Namespace, URIRef, RDF
@@ -22,11 +24,14 @@ logging.basicConfig()
 identifier = URIRef(app.config.get('IDENTIFIER', None))
 db_uri = Literal(app.config.get('DB_URI'))
 PER_PAGE = app.config.get("PER_PAGE", 20)
+REDIS_HOST = app.config.get('REDIS_HOST', None)
+REDIS_PORT = app.config.get('REDIS_PORT', None)
+REDIS_DB = app.config.get('REDIS_DB', None)
 store = plugin.get("SQLAlchemy", Store)(identifier=identifier, configuration=db_uri)
 graph = ConjunctiveGraph(store)
 graph.open(db_uri, create=False)
 graph.bind('skos', SKOS)
-
+rdb = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, charset="utf-8", decode_responses=True)
 
 EU = Namespace('http://eurovoc.europa.eu/schema#')
 UNBIST = Namespace('http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#')
@@ -81,13 +86,12 @@ def index():
     if not preferred_language:
         preferred_language = 'en'
     if request.args.get('aspect'):
-        aspect = request.args.get('aspect', None)
-    else:
-        aspect = 'MicroThesaurus'
-    try:
-        aspect_uri = ROUTABLES[aspect]
-    except KeyError:
-        aspect_uri = ROUTABLES['MicroThesaurus']
+        aspect = request.args.get('aspect', 'MicroThesaurus')
+
+    aspect_uri = ROUTABLES[aspect]
+
+    if aspect == 'Concept':
+        return get_concepts(page, preferred_language)
 
     results = []
     count_q = """select (count(distinct ?subject) as ?count)
@@ -98,40 +102,33 @@ def index():
     for r in res:
         count = int(r[0])
 
-    # FIXME: This query takes way too long
     q = """ select ?subject ?prefLabel
-            where { ?subject a <%s> .
-            ?subject skos:prefLabel ?prefLabel .
-            FILTER (lang(?prefLabel) = '%s') . }
-            order by ?prefLabel
-            LIMIT %s OFFSET %s""" % (
-                str(aspect_uri), preferred_language, int(PER_PAGE), (int(page) - 1) * int(PER_PAGE))
+        where { ?subject a <%s> .
+        ?subject skos:prefLabel ?prefLabel .
+        FILTER (lang(?prefLabel) = '%s') . }
+        order by ?prefLabel
+        LIMIT %s OFFSET %s""" % (
+            str(aspect_uri), preferred_language, int(PER_PAGE), (int(page) - 1) * int(PER_PAGE))
 
-    try:
-        for res in graph.query(q):
-            # r = Resource(graph, res)
-            res_label = res[1]
-            base_uri = ''
-            uri_anchor = ''
-            m = re.search('#', res[0])
-            if m:
-                base_uri, uri_anchor = res[0].split('#')
-            else:
-                base_uri = res[0]
-            results.append({
-                'base_uri': base_uri,
-                'uri_anchor': uri_anchor,
-                'pref_label': res_label})
+    for res in graph.query(q):
+        res_label = res[1]
+        base_uri = ''
+        uri_anchor = ''
+        m = re.search('#', res[0])
+        if m:
+            base_uri, uri_anchor = res[0].split('#')
+        else:
+            base_uri = res[0]
+        results.append({
+            'base_uri': base_uri,
+            'uri_anchor': uri_anchor,
+            'pref_label': res_label})
 
-    except Exception as e:
-        logger.error("Caught Fatal Exception : {} ".format(e))
-        abort(500)
-
-    sorted_results = sorted(results, key=lambda tup: tup['pref_label'])
+    # sorted_results = sorted(results, key=lambda tup: tup['pref_label'])
     pagination = Pagination(page, PER_PAGE, count)
 
     return render_template("index.html",
-        context=sorted_results,
+        context=results,
         lang=preferred_language,
         aspect=aspect,
         page=page,
@@ -259,8 +256,55 @@ def get_preferred_label(resource, language):
     if len(label) > 0:
         return label[0][1]
     else:
-        label = graph.preferredLabel(resource, lang=default_language)
-        if len(label) > 0:
-            return label[0][1]
+        return resource
+
+
+def get_pref_label_concept(concept_uri, language):
+    vals = rdb.get(concept_uri)
+    try:
+        data = json.loads(vals)
+    except TypeError as e:
+        logger.error(e)
+        return "Foobar"
+    return data.get(language, None)
+
+
+def get_concepts(page, lang):
+    num_concepts = 0
+    q = """select (count(distinct ?subject) as ?count)
+            where { ?subject a <%s> .} """ % str(SKOS.Concept)
+    res = graph.query(q)
+    for r in res:
+        num_concepts = int(r[0])
+
+    q = """ select ?subject
+    where { ?subject a <%s> . }
+    """ % str(SKOS.Concept)
+
+    results = []
+    uris = graph.query(q)
+    for uri in uris:
+        print(uri)
+        pref_label = get_pref_label_concept(str(uri[0]), lang)
+        base_uri = ''
+        uri_anchor = ''
+        m = re.search('#', uri[0])
+        if m:
+            base_uri, uri_anchor = uri[0].split('#')
         else:
-            return resource
+            base_uri = uri[0]
+        results.append({
+            'base_uri': base_uri,
+            'uri_anchor': uri_anchor,
+            'pref_label': pref_label})
+
+    sorted_results = sorted(results, key=lambda tup: tup['pref_label'])
+    pagination = Pagination(page, PER_PAGE, num_concepts)
+    response = sorted_results[int(page) - 1:int(page) + int(PER_PAGE)]
+
+    return render_template("index.html",
+        context=response,
+        lang=lang,
+        aspect="Concept",
+        page=page,
+        pagination=pagination)
