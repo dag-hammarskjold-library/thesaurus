@@ -10,16 +10,15 @@ from flask import Flask
 from flask import render_template, abort, request
 from config import DevelopmentConfig
 from elasticsearch import Elasticsearch
-import logging
 
 registerplugins()
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
 
-logger = logging.getLogger(__name__)
-logging.basicConfig()
-# logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+# logger = logging.getLogger(__name__)
+# logging.basicConfig()
+# # logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 # setup graph object
 identifier = URIRef(app.config.get('IDENTIFIER', None))
@@ -119,7 +118,12 @@ def index():
         LIMIT %s OFFSET %s""" % (
             str(aspect_uri), preferred_language, int(PER_PAGE), (int(page) - 1) * int(PER_PAGE))
 
+    app.logger.debug(q)
+
     for res in graph.query(q):
+        # r = Resource(graph, res)
+        # if Resource(graph, UNBIST.PlaceName) in list(r[RDF.type]):
+        #     continue
         res_label = res[1]
         base_uri = ''
         uri_anchor = ''
@@ -150,7 +154,7 @@ def term():
     uri_anchor = request.args.get('uri_anchor')
     base_uri = request.args.get('base_uri')
     if not base_uri:
-        logger.error("Forgot to pass base uri to term view!")
+        app.logger.error("Forgot to pass base uri to term view!")
         abort(404)
 
     uri = base_uri
@@ -237,7 +241,7 @@ def term():
 def search():
     query = request.args.get('q', None)
     if not query:
-        logging.error("Forgot to pass query to search view!")
+        app.logger.error("Forgot to pass query to search view!")
         abort(500)
     preferred_language = request.args.get('lang', 'en')
 
@@ -283,11 +287,7 @@ def get_pref_label_concept(concept_uri, language='en'):
     get prefLabel from redis store
     '''
     vals = rdb.get(concept_uri)
-    try:
-        data = json.loads(vals)
-    except TypeError as e:
-        logger.error(e)
-        return "Foobar"
+    data = json.loads(vals)
     return data.get(language, None)
 
 

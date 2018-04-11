@@ -4,17 +4,14 @@ from rdflib.store import Store
 from rdflib.namespace import SKOS
 from rdflib_sqlalchemy import registerplugins
 from flask import Flask
-from rdflib import plugin, ConjunctiveGraph, Literal, URIRef
+from rdflib import plugin, ConjunctiveGraph, Literal, URIRef, RDF, Namespace
+from rdflib.resource import Resource
 from config import DevelopmentConfig
-import logging
 
 registerplugins()
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
-
-logger = logging.getLogger(__name__)
-logging.basicConfig()
 
 # get config for sqlalchemy and create graph object
 identifier = URIRef(app.config.get('IDENTIFIER', None))
@@ -30,6 +27,8 @@ REDIS_PORT = app.config.get('REDIS_PORT', None)
 REDIS_DB = app.config.get('REDIS_DB', None)
 rdb = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, charset="utf-8", decode_responses=True)
 
+UNBIST = Namespace('http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#')
+
 # get all SKOS.Concept uri's
 query = """select ?subject
             where { ?subject a <http://www.w3.org/2004/02/skos/core#Concept> . } """
@@ -41,6 +40,10 @@ res = graph.query(query)
 # to retrieve: data = redis.get(uri), dict=json.loads(data)
 labels = {}
 for r in res:
+    # r = Resource(graph, res)
+    # if Resource(graph, UNBIST.PlaceName) in list(r[RDF.type]):
+    #     continue
+    # Code above leads to a SQAlchemy Programming error
     for lang in ['ar', 'zh', 'en', 'fr', 'ru', 'es']:
         label = graph.preferredLabel(r[0], lang=lang)
         if len(label):
