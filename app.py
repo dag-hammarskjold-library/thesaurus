@@ -7,7 +7,7 @@ from rdflib.store import Store
 from rdflib.namespace import SKOS
 from rdflib_sqlalchemy import registerplugins
 from flask import Flask
-from flask import render_template, abort, request
+from flask import render_template, abort, request, Response
 from config import DevelopmentConfig
 from elasticsearch import Elasticsearch
 
@@ -289,6 +289,25 @@ def get_pref_label_concept(concept_uri, language='en'):
     vals = rdb.get(concept_uri)
     data = json.loads(vals)
     return data.get(language, None)
+
+
+@app.route('/autocomplete')
+def autocomplete():
+    q = request.args.get('q', None)
+    preferred_language = request.args.get('lang', 'en')
+    if not q:
+        abort(500)
+
+    match = es.search(index='thesaurus', q=q, size=50, _source=['labels', 'alt_labels', 'uri'])
+    results = []
+    for res in match["hits"]["hits"]:
+        pref_label = get_preferred_label(URIRef(res["_source"]["uri"]), preferred_language)
+        results.append({
+            'pref_label': pref_label,
+            'uri': res["_source"]["uri"]
+        })
+
+    return Response(json.dumps(results), content_type='application/json')
 
 
 def get_concepts(page, lang='en'):
