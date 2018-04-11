@@ -4,6 +4,9 @@
 
 {% macro render_pagination(pagination) %}
   <div class=pagination>
+    {% if pagination.has_prev %}
+      <a href="/?lang={{lang}}&aspect={{aspect}}&page={{pagination.page|int - 1}}">&laquo; Prev</a>
+    {% endif %}
   {%- for page in pagination.iter_pages() %}
     {% if page %}
       {% if page != pagination.page %}

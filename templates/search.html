@@ -5,7 +5,7 @@
   <div class="row">
     <div class="col-md-12">
         <!-- {{ results }} -->
-        <h2>Search results </h2>
+        <h2>Search results: {{query}} </h2>
             {% for res in results %}
                 {% set uri_parts = res.uri.split('#') %}
                 <a href="/term?lang={{lang}}&base_uri={{uri_parts.0}}&uri_anchor={{uri_parts.1}}">{{ res.pref_label }}</a>

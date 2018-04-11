@@ -21,17 +21,25 @@ logger = logging.getLogger(__name__)
 logging.basicConfig()
 # logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
+# setup graph object
 identifier = URIRef(app.config.get('IDENTIFIER', None))
 db_uri = Literal(app.config.get('DB_URI'))
-PER_PAGE = app.config.get("PER_PAGE", 20)
-REDIS_HOST = app.config.get('REDIS_HOST', None)
-REDIS_PORT = app.config.get('REDIS_PORT', None)
-REDIS_DB = app.config.get('REDIS_DB', None)
 store = plugin.get("SQLAlchemy", Store)(identifier=identifier, configuration=db_uri)
 graph = ConjunctiveGraph(store)
 graph.open(db_uri, create=False)
 graph.bind('skos', SKOS)
+
+# setup redis connection
+PER_PAGE = app.config.get("PER_PAGE", 20)
+REDIS_HOST = app.config.get('REDIS_HOST', None)
+REDIS_PORT = app.config.get('REDIS_PORT', None)
+REDIS_DB = app.config.get('REDIS_DB', None)
 rdb = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, charset="utf-8", decode_responses=True)
+
+# setup Elasticsearch connection
+elasticsearch_uri = app.config.get('ELASTICSEARCH_URI', None)
+index_name = app.config.get('INDEX_NAME', None)
+es = Elasticsearch(elasticsearch_uri)
 
 EU = Namespace('http://eurovoc.europa.eu/schema#')
 UNBIST = Namespace('http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#')
@@ -85,11 +93,12 @@ def index():
     preferred_language = request.args.get('lang')
     if not preferred_language:
         preferred_language = 'en'
-    if request.args.get('aspect'):
-        aspect = request.args.get('aspect', 'MicroThesaurus')
+    aspect = request.args.get('aspect', 'MicroThesaurus')
 
     aspect_uri = ROUTABLES[aspect]
 
+    # if listing SKOS Concepts
+    # use redis store
     if aspect == 'Concept':
         return get_concepts(page, preferred_language)
 
@@ -124,7 +133,6 @@ def index():
             'uri_anchor': uri_anchor,
             'pref_label': res_label})
 
-    # sorted_results = sorted(results, key=lambda tup: tup['pref_label'])
     pagination = Pagination(page, PER_PAGE, count)
 
     return render_template("index.html",
@@ -137,11 +145,12 @@ def index():
 
 @app.route('/term')
 def term():
-    preferred_language = request.args.get('lang')
+    page = request.args.get('page', '1')
+    preferred_language = request.args.get('lang', 'en')
     uri_anchor = request.args.get('uri_anchor')
     base_uri = request.args.get('base_uri')
     if not base_uri:
-        logger.error("Forgot to pass base uril to term view!")
+        logger.error("Forgot to pass base uri to term view!")
         abort(404)
 
     uri = base_uri
@@ -193,18 +202,23 @@ def term():
             relationships.append(sr)
 
     matches = []
-    for t in [SKOS.relatedMatch, SKOS.broadMatch, SKOS.closeMatch, SKOS.exactMatch, SKOS.narrowMatch]:
-        matches_q = """ PREFIX owl: <http://www.w3.org/2002/07/owl#>
-            select ?%s where
-            { <%s> owl:sameAs ?osa . ?%s <%s> ?osa }""" % (
-                t.split('#')[1], uri, t.split('#')[1], t)
+    matches_q = """ prefix skos: <http://www.w3.org/2004/02/skos/core#>
+            prefix eu: <http://eurovoc.europa.eu/schema#>
+            select ?exactmatch where
+            {
+             <%s> dcterms:identifier ?identifier . ?identifier skos:exactMatch ?exactMatch
+            }""" % uri
 
-        for m in graph.query(matches_q):
-            matches.append({'type': t.split('#')[1], 'uri': m})
+    for m in graph.query(matches_q):
+        matches.append({'uri': m})
 
     rdf_types = []
     for t in graph.objects(subject=URIRef(uri), predicate=RDF.type):
         rdf_types.append({'short_name': t.split('#')[1], 'uri': t})
+
+    count = len(relationships)
+    rel = relationships[(int(page) - 1) * int(PER_PAGE):(int(page) - 1) * int(PER_PAGE) + int(PER_PAGE)]
+    pagination = Pagination(page, PER_PAGE, count)
 
     return render_template('term.html',
         rdf_types=rdf_types,
@@ -213,9 +227,10 @@ def term():
         alt_labels=alt_labels,
         breadcrumbs=breadcrumbs,
         scope_notes=scope_notes,
-        relationships=relationships,
+        relationships=rel,
         matches=matches,
-        lang=preferred_language)
+        lang=preferred_language,
+        pagination=pagination)
 
 
 @app.route('/search')
@@ -224,28 +239,27 @@ def search():
     if not query:
         logging.error("Forgot to pass query to search view!")
         abort(500)
-    preferred_language = request.args.get('lang')
-    if not preferred_language:
-        preferred_language = 'en'
+    preferred_language = request.args.get('lang', 'en')
 
-    elasticsearch_uri = app.config.get('ELASTICSEARCH_URI', None)
-    index_name = app.config.get('INDEX_NAME', None)
-    es = Elasticsearch(elasticsearch_uri)
-
-    match = es.search(index=index_name, q=query)
-    if len(match) == 0:
+    match = es.search(index=index_name, q=query, size=50)
+    count = len(match)
+    if count == 0:
         resp = ["No Matches"]
         return render_template('search.html', results=resp)
     resp = []
     for m in match['hits']['hits']:
         resp.append({
-            # 'score': m['_score'],
+            'score': m['_score'],
             'pref_label': get_preferred_label(URIRef(m["_source"]["uri"]), preferred_language),
             'uri': m["_source"]["uri"],
         }
         )
 
-    return render_template('search.html', results=resp, lang=preferred_language)
+    return render_template(
+        'search.html',
+        results=resp,
+        query=query,
+        lang=preferred_language)
 
 
 def get_preferred_label(resource, language):
@@ -259,7 +273,15 @@ def get_preferred_label(resource, language):
         return resource
 
 
-def get_pref_label_concept(concept_uri, language):
+def get_pref_label_concept(concept_uri, language='en'):
+    '''
+    get prefLabel for a concept
+    @args:
+    :concept_uri: uri of concept -- this will only work
+        for SKOS.Concept items
+    :language: one of ar, zh, en, fr, ru, es
+    get prefLabel from redis store
+    '''
     vals = rdb.get(concept_uri)
     try:
         data = json.loads(vals)
@@ -269,7 +291,20 @@ def get_pref_label_concept(concept_uri, language):
     return data.get(language, None)
 
 
-def get_concepts(page, lang):
+def get_concepts(page, lang='en'):
+    '''
+    @args
+        page: requested page number
+        lang: requested language parameter
+    get all concept uir's and prefLabels
+    sort on prefLabels
+    this method is seperate from index (above)
+    because rdflib-sqlalchemy is basically
+    useless for triple store
+
+    Need all concepts and prefLabels
+    so that sorting makes sense
+    '''
     num_concepts = 0
     q = """select (count(distinct ?subject) as ?count)
             where { ?subject a <%s> .} """ % str(SKOS.Concept)
@@ -284,8 +319,9 @@ def get_concepts(page, lang):
     results = []
     uris = graph.query(q)
     for uri in uris:
-        print(uri)
         pref_label = get_pref_label_concept(str(uri[0]), lang)
+        if not pref_label:
+            continue
         base_uri = ''
         uri_anchor = ''
         m = re.search('#', uri[0])
