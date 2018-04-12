@@ -4,7 +4,7 @@ from rdflib.store import Store
 from rdflib.namespace import SKOS
 from rdflib_sqlalchemy import registerplugins
 from flask import Flask
-from rdflib import plugin, ConjunctiveGraph, Literal, URIRef, Namespace
+from rdflib import plugin, ConjunctiveGraph, Literal, URIRef
 from config import DevelopmentConfig
 
 registerplugins()
@@ -26,9 +26,10 @@ REDIS_PORT = app.config.get('REDIS_PORT', None)
 REDIS_DB = app.config.get('REDIS_DB', None)
 rdb = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, charset="utf-8", decode_responses=True)
 
-UNBIST = Namespace('http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#')
+# delete everything in this redis database
+rdb.flushdb()
 
-# get all SKOS.Concept uri's
+# get all SKOS.Concept uri's (except place names)
 query = """
     prefix unbist: <http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#>
     select ?uri
@@ -41,11 +42,9 @@ res = graph.query(query)
 # store URI -> json.dumps({'ar': prefLabel, 'zh': prefLabel, 'en': prefLabel ...})
 # to retrieve: data = redis.get(uri), dict=json.loads(data)
 labels = {}
+i = 0
 for r in res:
-    # r = Resource(graph, res)
-    # if Resource(graph, UNBIST.PlaceName) in list(r[RDF.type]):
-    #     continue
-    # Code above leads to a SQAlchemy Programming error
+    i += 1
     for lang in ['ar', 'zh', 'en', 'fr', 'ru', 'es']:
         label = graph.preferredLabel(r[0], lang=lang)
         if len(label):
@@ -53,3 +52,5 @@ for r in res:
     data = json.dumps(labels)
     rdb.set(str(r[0]), data)
     labels = {}
+    if i % 50 == 0:
+        print("{} documents processed".format(i))

@@ -245,7 +245,12 @@ def search():
         abort(500)
     preferred_language = request.args.get('lang', 'en')
 
-    match = es.search(index=index_name, q=query, size=50)
+    match = es.search(
+        index=index_name,
+        q=query,
+        size=50,
+        _source=['labels_{}'.format(preferred_language),
+            'alt_labels_{}'.format(preferred_language), 'uri'])
     count = len(match)
     if count == 0:
         resp = ["No Matches"]
@@ -298,7 +303,9 @@ def autocomplete():
     if not q:
         abort(500)
 
-    match = es.search(index='thesaurus', q=q, size=20, _source=['labels', 'alt_labels', 'uri'])
+    match = es.search(index='thesaurus', q=q, size=20, _source=['labels_{}'.format(preferred_language), 'uri'])
+    # if len(match) < 2:
+    #     es.search(index='thesaurus', q=q, size=20, _source=['alt_labels_{}'.format(preferred_language), 'uri'])
     results = []
     for res in match["hits"]["hits"]:
         pref_label = get_preferred_label(URIRef(res["_source"]["uri"]), preferred_language)
