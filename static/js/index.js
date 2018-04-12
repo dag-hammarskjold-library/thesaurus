@@ -1,17 +1,48 @@
 $( document ).ready(function(){
-    $('#q').autocomplete({
+    function get_lang(){
+        var url_string = window.location.href;
+        var url = new URL(url_string);
+        var lang = url.searchParams.get("lang");
+        if(lang){
+            return lang;
+        } else {
+            return 'en';
+        }
+    }
+
+    $("#search-btn").on("focus", function(e){
+        console.log(e);
+        var lang = get_lang();
+        document.getElementById("lang-input").value = lang;
+
+    });
+
+    var xhr;
+    var lang = get_lang();
+    xhr = $('#autocomplete').autocomplete({
         minLength:2,   
         delay:500,
-        source: function(request, response) {
-            var requestUrl = "/autocomplete"
-            $.ajax({
-                url: requestUrl,
-                type: "GET",
-                data: {"q": request.term},
-                async: false
-            }).done(function(msg) {
-                console.log(msg);
+        source: function( request, response ){
+            xhr = $.ajax({
+                url: "/autocomplete?lang=" + lang + "&q=" + request.term,
+                dataType: "json",
+                cache: false,
+                success: function(data) {
+                    console.log(data);
+                    response($.map(data, function(item) {
+                        return {
+                            label: item.pref_label,
+                            base_uri: item.base_uri,
+                            uri_anchor: item.uri_anchor
+                        };
+                    }));
+                }
             });
+        }, select: function(event, ui) {
+            lang = get_lang();
+            console.log(ui);
+            window.location = "/term?lang=" + lang + "&base_uri=" + ui.item.base_uri + "&uri_anchor=" + ui.item.uri_anchor;
         }
     });
+
 });

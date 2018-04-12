@@ -298,13 +298,21 @@ def autocomplete():
     if not q:
         abort(500)
 
-    match = es.search(index='thesaurus', q=q, size=50, _source=['labels', 'alt_labels', 'uri'])
+    match = es.search(index='thesaurus', q=q, size=20, _source=['labels', 'alt_labels', 'uri'])
     results = []
     for res in match["hits"]["hits"]:
         pref_label = get_preferred_label(URIRef(res["_source"]["uri"]), preferred_language)
+        base_uri = ''
+        uri_anchor = ''
+        m = re.search('#', res["_source"]["uri"])
+        if m:
+            base_uri, uri_anchor = res["_source"]["uri"].split('#')
+        else:
+            base_uri = res["_source"]["uri"][0]
         results.append({
-            'pref_label': pref_label,
-            'uri': res["_source"]["uri"]
+            "base_uri": base_uri,
+            "uri_anchor": uri_anchor,
+            "pref_label": pref_label
         })
 
     return Response(json.dumps(results), content_type='application/json')

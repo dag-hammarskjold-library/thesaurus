@@ -92,6 +92,7 @@ for uri in graph.query(querystring):
         if label[1].language in ['en', 'fr', 'es']:
             labels_orig_lc.append(label[1].lower())
     doc.update({"labels": pref_labels})
+    doc.update({"labels_orig": labels_orig_lc})
 
     alt_labels = []
     alt_labels_orig_lc = []
@@ -100,7 +101,7 @@ for uri in graph.query(querystring):
         if label.language in ['en', 'fr', 'es']:
             alt_labels_orig_lc.append(label.lower())
     doc.update({"alt_labels": alt_labels})
-    doc.update({"alt_labels_orig": alt_labels + alt_labels_orig_lc})
+    doc.update({"alt_labels_orig": alt_labels_orig_lc})
 
     scope_notes = []
     for sn in graph.objects(URIRef(this_uri), SKOS.scopeNote):

@@ -4,8 +4,7 @@ from rdflib.store import Store
 from rdflib.namespace import SKOS
 from rdflib_sqlalchemy import registerplugins
 from flask import Flask
-from rdflib import plugin, ConjunctiveGraph, Literal, URIRef, RDF, Namespace
-from rdflib.resource import Resource
+from rdflib import plugin, ConjunctiveGraph, Literal, URIRef, Namespace
 from config import DevelopmentConfig
 
 registerplugins()
@@ -30,8 +29,11 @@ rdb = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, charset="utf-8"
 UNBIST = Namespace('http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#')
 
 # get all SKOS.Concept uri's
-query = """select ?subject
-            where { ?subject a <http://www.w3.org/2004/02/skos/core#Concept> . } """
+query = """
+    prefix unbist: <http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#>
+    select ?uri
+    where
+    { ?uri rdf:type skos:Concept filter not exists { ?uri rdf:type unbist:PlaceName } . }"""
 
 res = graph.query(query)
 
