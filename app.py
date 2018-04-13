@@ -303,9 +303,20 @@ def autocomplete():
     if not q:
         abort(500)
 
-    match = es.search(index='thesaurus', q=q, size=20, _source=['labels_{}'.format(preferred_language), 'uri'])
+    #  q_dsl = '{"query":{"term":{"label_%s" : "%s"}}}' % (preferred_language, q)
+
+    app.logger.debug("Looking at labels_{}".format(preferred_language))
+    match = es.search(index='thesaurus', q=q,
+        size=20, _source_include=[
+            "labels_%s" % preferred_language,
+            "alt_labels_%s" % preferred_language,
+            'uri']
+    )
     # if len(match) < 2:
-    #     es.search(index='thesaurus', q=q, size=20, _source=['alt_labels_{}'.format(preferred_language), 'uri'])
+    #     app.logger.debug("Also looking at alt_labels_{}".format(preferred_language))
+    #     # q_dsl = '{"query":{"multi_match":{"query":"%s","fields":["label_%s","alt_label_%s"]}}}' % (
+    #     # q, preferred_language, preferred_language)
+    #     # match += es.search(index='thesaurus', body=q_dsl, size=20)
     results = []
     for res in match["hits"]["hits"]:
         pref_label = get_preferred_label(URIRef(res["_source"]["uri"]), preferred_language)

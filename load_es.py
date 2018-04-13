@@ -28,11 +28,7 @@ es_con = Elasticsearch(elasticsearch_uri)
 EU = Namespace('http://eurovoc.europa.eu/schema#')
 UNBIST = Namespace('http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#')
 
-querystring = """
-    prefix unbist: <http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#>
-    select ?uri
-    where
-    { ?uri rdf:type skos:Concept filter not exists { ?uri rdf:type unbist:PlaceName } . }"""
+querystring = """ select ?uri where { ?uri rdf:type skos:Concept . }"""
 
 
 thesaurus_index = {
@@ -42,6 +38,7 @@ thesaurus_index = {
         }
     }
 }
+
 
 # Delete index if exists
 if es_con.indices.exists(index_name):
@@ -54,27 +51,60 @@ print("creating {} index...".format(index_name))
 res = es_con.indices.create(index=index_name, body=thesaurus_index)
 print(" response: {}".format(res))
 
+analysis = {
+    "analysis": {
+        "analyzer": {
+            "autocomplete": {
+                "tokenizer": "autocomplete",
+                "filter": [
+                    "lowercase"
+                ]
+            },
+            "autocomplete_search": {
+                "tokenizer": "lowercase"
+            }
+        },
+        "tokenizer": {
+            "autocomplete": {
+                "type": "edge_ngram",
+                "min_gram": 2,
+                "max_gram": 10,
+                "token_chars": [
+                    "letter",
+                    "digit"
+                ]
+            }
+        }
+    }
+}
+print("creating analyzer")
+es_con.indices.close(index=index_name)
+res = es_con.indices.put_settings(body=analysis, index=index_name)
+es_con.indices.open(index=index_name)
+print(" response: {}".format(res))
+
+
 thesaurus_mapping = {
     "properties": {
         "uri": {"type": "text"},
         "scope_notes_ar": {"type": "text", "analyzer": "arabic"},
         "scope_notes_zh": {"type": "text", "analyzer": "chinese"},
-        "scope_notes_en": {"type": "text", "analyzer": "english"},
-        "scope_notes_fr": {"type": "text", "analyzer": "french"},
+        "scope_notes_en": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
+        "scope_notes_fr": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
         "scope_notes_ru": {"type": "text", "analyzer": "russian"},
-        "scope_notes_es": {"type": "text", "analyzer": "spanish"},
+        "scope_notes_es": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
         "labels_ar": {"type": "text", "analyzer": "arabic"},
         "labels_zh": {"type": "text", "analyzer": "chinese"},
-        "labels_en": {"type": "text", "analyzer": "english"},
-        "labels_fr": {"type": "text", "analyzer": "french"},
+        "labels_en": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
+        "labels_fr": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
         "labels_ru": {"type": "text", "analyzer": "russian"},
-        "labels_es": {"type": "text", "analyzer": "spanish"},
+        "labels_es": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
         "alt_labels_ar": {"type": "text", "analyzer": "arabic"},
         "alt_labels_zh": {"type": "text", "analyzer": "chinese"},
-        "alt_labels_en": {"type": "text", "analyzer": "english"},
-        "alt_labels_fr": {"type": "text", "analyzer": "french"},
+        "alt_labels_en": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
+        "alt_labels_fr": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
         "alt_labels_ru": {"type": "text", "analyzer": "russian"},
-        "alt_labels_es": {"type": "text", "analyzer": "spanish"},
+        "alt_labels_es": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
         "created": {
             "type": "date",
             "format": "strict_date_optional_time||epoch_millis"

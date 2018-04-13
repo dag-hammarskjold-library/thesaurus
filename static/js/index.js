@@ -10,11 +10,10 @@ $( document ).ready(function(){
         }
     }
 
-    $("#search-btn").on("focus", function(e){
+    $("#autocomplete").on("focus", function(e){
         console.log(e);
         var lang = get_lang();
         document.getElementById("lang-input").value = lang;
-
     });
 
     var xhr;
