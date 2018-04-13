@@ -121,9 +121,6 @@ def index():
     app.logger.debug(q)
 
     for res in graph.query(q):
-        # r = Resource(graph, res)
-        # if Resource(graph, UNBIST.PlaceName) in list(r[RDF.type]):
-        #     continue
         res_label = res[1]
         base_uri = ''
         uri_anchor = ''
@@ -271,6 +268,39 @@ def search():
         lang=preferred_language)
 
 
+@app.route('/autocomplete')
+def autocomplete():
+    q = request.args.get('q', None)
+    preferred_language = request.args.get('lang', 'en')
+    if not q:
+        abort(500)
+
+    app.logger.debug("Looking at labels_{}".format(preferred_language))
+    match = es.search(index='thesaurus', q=q,
+        size=20, _source_include=[
+            "labels_%s" % preferred_language,
+            # "alt_labels_%s" % preferred_language,
+            'uri']
+    )
+    results = []
+    for res in match["hits"]["hits"]:
+        pref_label = get_preferred_label(URIRef(res["_source"]["uri"]), preferred_language)
+        base_uri = ''
+        uri_anchor = ''
+        m = re.search('#', res["_source"]["uri"])
+        if m:
+            base_uri, uri_anchor = res["_source"]["uri"].split('#')
+        else:
+            base_uri = res["_source"]["uri"][0]
+        results.append({
+            "base_uri": base_uri,
+            "uri_anchor": uri_anchor,
+            "pref_label": pref_label
+        })
+
+    return Response(json.dumps(results), content_type='application/json')
+
+
 def get_preferred_label(resource, language):
     default_language = app.config.get('LANGUAGE_CODE')
     if not language:
@@ -296,46 +326,6 @@ def get_pref_label_concept(concept_uri, language='en'):
     return data.get(language, None)
 
 
-@app.route('/autocomplete')
-def autocomplete():
-    q = request.args.get('q', None)
-    preferred_language = request.args.get('lang', 'en')
-    if not q:
-        abort(500)
-
-    #  q_dsl = '{"query":{"term":{"label_%s" : "%s"}}}' % (preferred_language, q)
-
-    app.logger.debug("Looking at labels_{}".format(preferred_language))
-    match = es.search(index='thesaurus', q=q,
-        size=20, _source_include=[
-            "labels_%s" % preferred_language,
-            "alt_labels_%s" % preferred_language,
-            'uri']
-    )
-    # if len(match) < 2:
-    #     app.logger.debug("Also looking at alt_labels_{}".format(preferred_language))
-    #     # q_dsl = '{"query":{"multi_match":{"query":"%s","fields":["label_%s","alt_label_%s"]}}}' % (
-    #     # q, preferred_language, preferred_language)
-    #     # match += es.search(index='thesaurus', body=q_dsl, size=20)
-    results = []
-    for res in match["hits"]["hits"]:
-        pref_label = get_preferred_label(URIRef(res["_source"]["uri"]), preferred_language)
-        base_uri = ''
-        uri_anchor = ''
-        m = re.search('#', res["_source"]["uri"])
-        if m:
-            base_uri, uri_anchor = res["_source"]["uri"].split('#')
-        else:
-            base_uri = res["_source"]["uri"][0]
-        results.append({
-            "base_uri": base_uri,
-            "uri_anchor": uri_anchor,
-            "pref_label": pref_label
-        })
-
-    return Response(json.dumps(results), content_type='application/json')
-
-
 def get_concepts(page, lang='en'):
     '''
     @args
@@ -358,8 +348,8 @@ def get_concepts(page, lang='en'):
         num_concepts = int(r[0])
 
     q = """ select ?subject
-    where { ?subject a <%s> . }
-    """ % str(SKOS.Concept)
+        where { ?subject a <%s> . }
+        """ % str(SKOS.Concept)
 
     results = []
     uris = graph.query(q)
