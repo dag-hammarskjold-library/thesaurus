@@ -67,7 +67,7 @@ analysis = {
         "tokenizer": {
             "autocomplete": {
                 "type": "edge_ngram",
-                "min_gram": 2,
+                "min_gram": 3,
                 "max_gram": 10,
                 "token_chars": [
                     "letter",
@@ -86,13 +86,7 @@ print(" response: {}".format(res))
 
 thesaurus_mapping = {
     "properties": {
-        "uri": {"type": "text"},
-        "scope_notes_ar": {"type": "text", "analyzer": "arabic"},
-        "scope_notes_zh": {"type": "text", "analyzer": "chinese"},
-        "scope_notes_en": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
-        "scope_notes_fr": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
-        "scope_notes_ru": {"type": "text", "analyzer": "russian"},
-        "scope_notes_es": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
+        "uri": {"type": "text", "index": "false"},
         "labels_ar": {"type": "text", "analyzer": "arabic"},
         "labels_zh": {"type": "text", "analyzer": "chinese"},
         "labels_en": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
@@ -105,10 +99,6 @@ thesaurus_mapping = {
         "alt_labels_fr": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
         "alt_labels_ru": {"type": "text", "analyzer": "russian"},
         "alt_labels_es": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
-        "created": {
-            "type": "date",
-            "format": "strict_date_optional_time||epoch_millis"
-        }
     }
 }
 
@@ -133,11 +123,11 @@ for uri in graph.query(querystring):
                 alt_labels.append(label)
         doc.update({"alt_labels_{}".format(lang): alt_labels})
 
-        scope_notes = []
-        for sn in graph.objects(URIRef(this_uri), SKOS.scopeNote):
-            if sn.language == lang:
-                scope_notes.append(sn)
-        doc.update({"scope_notes_{}".format(lang): scope_notes})
+        # scope_notes = []
+        # for sn in graph.objects(URIRef(this_uri), SKOS.scopeNote):
+        #     if sn.language == lang:
+        #         scope_notes.append(sn)
+        # doc.update({"scope_notes_{}".format(lang): scope_notes})
 
         payload = json.dumps(doc)
 

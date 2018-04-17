@@ -246,8 +246,7 @@ def search():
         index=index_name,
         q=query,
         size=50,
-        _source=['labels_{}'.format(preferred_language),
-            'alt_labels_{}'.format(preferred_language), 'uri'])
+        _source=['labels_{}'.format(preferred_language), 'uri'])
     count = len(match)
     if count == 0:
         resp = ["No Matches"]
@@ -275,15 +274,25 @@ def autocomplete():
     if not q:
         abort(500)
 
+    # match against label and alt label for
+    # the preferred language
+    # boost preferred label
+    dsl_q = """
+     {
+       "query": {
+         "multi_match" : {
+           "query":    "%s",
+           "fields": [ "labels_%s^3", "alt_labels_%s" ]
+         }
+       }
+     }""" % (q, preferred_language, preferred_language)
+
     app.logger.debug("Looking at labels_{}".format(preferred_language))
-    match = es.search(index='thesaurus', q=q,
-        size=20, _source_include=[
-            "labels_%s" % preferred_language,
-            # "alt_labels_%s" % preferred_language,
-            'uri']
-    )
+    match = es.search(index='thesaurus', body=dsl_q, size=20)
     results = []
     for res in match["hits"]["hits"]:
+        if not res["_source"].get("labels_%s" % preferred_language):
+            continue
         pref_label = get_preferred_label(URIRef(res["_source"]["uri"]), preferred_language)
         base_uri = ''
         uri_anchor = ''

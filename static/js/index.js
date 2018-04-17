@@ -10,11 +10,11 @@ $( document ).ready(function(){
         }
     }
 
-    $("#autocomplete").on("focus", function(e){
-        console.log(e);
-        var lang = get_lang();
-        document.getElementById("lang-input").value = lang;
-    });
+    // $("#autocomplete").on("focus", function(e){
+    //     console.log(e);
+    //     var lang = get_lang();
+    //     document.getElementById("lang-input").value = lang;
+    // });
 
     var xhr;
     var lang = get_lang();
@@ -44,4 +44,15 @@ $( document ).ready(function(){
         }
     });
 
+    $(".lang").on("click", function(e){
+        e.preventDefault();
+        var currentURL = window.location.href;
+        var lang = get_lang();
+        var prefLang = this.id;
+        console.log(prefLang);
+        var searchParams = new URLSearchParams(window.location.search);
+        searchParams.set("lang", prefLang);
+        window.location.search = searchParams.toString();
+        
+    });
 });
