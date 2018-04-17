@@ -240,7 +240,10 @@ def search():
     if not query:
         app.logger.error("Forgot to pass query to search view!")
         abort(500)
-    preferred_language = request.args.get('lang', 'en')
+    preferred_language = request.args.get('lang', None)
+    if not preferred_language:
+        app.logger.error("No language set in search view!")
+        abort(500)
 
     match = es.search(
         index=index_name,
@@ -250,13 +253,13 @@ def search():
     count = len(match)
     if count == 0:
         resp = ["No Matches"]
-        return render_template('search.html', results=resp)
+        return render_template('search.html', results=resp, lang=preferred_language)
     resp = []
     for m in match['hits']['hits']:
         resp.append({
             'score': m['_score'],
             'pref_label': get_preferred_label(URIRef(m["_source"]["uri"]), preferred_language),
-            'uri': m["_source"]["uri"],
+            'uri': m["_source"]["uri"]
         }
         )
 
@@ -270,8 +273,10 @@ def search():
 @app.route('/autocomplete')
 def autocomplete():
     q = request.args.get('q', None)
-    preferred_language = request.args.get('lang', 'en')
+    preferred_language = request.args.get('lang', None)
     if not q:
+        abort(500)
+    if not preferred_language:
         abort(500)
 
     # match against label and alt label for
