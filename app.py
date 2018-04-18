@@ -205,14 +205,14 @@ def term():
             relationships.append(sr)
 
     matches = []
-    matches_q = """ prefix skos: <http://www.w3.org/2004/02/skos/core#>
-            select ?exactmatch where
-            {
-             <%s> dcterms:identifier ?identifier . ?identifier skos:exactMatch ?exactMatch
-            }""" % uri
+    # matches_q = """ prefix skos: <http://www.w3.org/2004/02/skos/core#>
+    #         select ?exactmatch ?prop where
+    #         {
+    #          <%s> dcterms:identifier ?identifier . ?identifier skos:exactMatch ?exactMatch
+    #         }""" % uri
 
-    for m in graph.query(matches_q):
-        matches.append({'uri': m})
+    # for m in graph.query(matches_q):
+    #     matches.append({'uri': m})
 
     rdf_types = []
     for t in graph.objects(subject=URIRef(uri), predicate=RDF.type):
