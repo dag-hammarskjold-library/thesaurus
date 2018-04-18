@@ -46,13 +46,11 @@ ROUTABLES = {
     'Concept': SKOS.Concept,
     'ConceptScheme': SKOS.ConceptScheme,
     'Domain': EU.Domain,
-    'MicroThesaurus': EU.MicroThesaurus,
-    'GeographicTerm': UNBIST.GeographicTerm,
+    'MicroThesaurus': EU.MicroThesaurus
 }
 
 
-class Pagination(object):
-
+class Pagination():
     def __init__(self, page, per_page, total_count):
         self.page = page
         self.per_page = per_page
@@ -94,7 +92,11 @@ def index():
         preferred_language = 'en'
     aspect = request.args.get('aspect', 'MicroThesaurus')
 
-    aspect_uri = ROUTABLES[aspect]
+    try:
+        aspect_uri = ROUTABLES[aspect]
+    except KeyError as e:
+        app.logger.error("Caught exception : {}".format(e))
+    aspect_uri = ROUTABLES['MicroThesaurus']
 
     # if listing SKOS Concepts
     # use redis store
@@ -204,7 +206,6 @@ def term():
 
     matches = []
     matches_q = """ prefix skos: <http://www.w3.org/2004/02/skos/core#>
-            prefix eu: <http://eurovoc.europa.eu/schema#>
             select ?exactmatch where
             {
              <%s> dcterms:identifier ?identifier . ?identifier skos:exactMatch ?exactMatch
