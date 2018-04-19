@@ -50,7 +50,7 @@ ROUTABLES = {
 }
 
 
-class Pagination():
+class Pagination:
     def __init__(self, page, per_page, total_count):
         self.page = page
         self.per_page = per_page
@@ -80,6 +80,122 @@ class Pagination():
                     yield None
                 yield num
                 last = num
+
+
+class Term:
+    def __init__(self, concept, lang):
+        """
+        @concept in a concept URI, e.g.
+        https://metadata.un.org/thesaurus#1000463
+
+        @lang is the preferred language of the interface
+        """
+        self.concept = concept
+        self.lang = lang
+
+    @property
+    def preferred_language(self):
+        return self.lang
+
+    def breadcrumbs(self):
+        """
+        get breadcumbs when a user clicks on a concept
+        """
+        breadcrumbs = []
+        breadcrumbs_q = """
+            prefix skos: <http://www.w3.org/2004/02/skos/core#>
+            prefix eu: <http://eurovoc.europa.eu/schema#>
+            select ?domain ?microthesaurus where
+            {
+                {  ?domain skos:hasTopConcept ?microthesaurus . ?microthesaurus skos:narrower <%s> . }
+            union
+                { ?domain rdf:type eu:Domain . ?domain skos:hasTopConcept <%s> . }
+            }
+            """ % (self.concept, self.concept)
+        for res in graph.query(breadcrumbs_q):
+            bc = {}
+            bc.update(
+                {'domain':
+                    {'uri': res.domain, 'pref_label': get_preferred_label(res.domain, self.lang)}})
+            if res.microthesaurus:
+                bc.update({
+                    'microthesaurus':
+                    {'uri': res.microthesaurus,
+                    'pref_label': get_preferred_label(res.microthesaurus, self.lang)}})
+            breadcrumbs.append(bc)
+        return breadcrumbs
+
+    def scope_notes(self):
+        """
+        display scope notes (if avalable)
+        for a concept
+        """
+        scope_notes = []
+        sns = graph.objects(subject=URIRef(self.concept), predicate=SKOS.scopeNote)
+        for s in sns:
+            if s.language == self.lang:
+                scope_notes.append(s)
+        return scope_notes
+
+    def alt_labels(self):
+        """
+        if alternative lables exist
+        for this concept in the given language
+        display them
+        """
+        alt_labels = []
+        als = graph.objects(subject=URIRef(self.concept), predicate=SKOS.altLabel)
+        for a in als:
+            if a.language == self.lang:
+                alt_labels.append(a)
+        return alt_labels
+
+    def relationships(self):
+        """
+        given a concept get all related,
+        broader and narrower terms
+        """
+        relationships = []
+        for c in [SKOS.broader, SKOS.related, SKOS.narrower, SKOS.member]:
+            this_results = []
+            for rel in graph.objects(subject=URIRef(self.concept), predicate=c):
+                rel_label = get_preferred_label(rel, self.lang)
+                this_results.append({'type': c.split('#')[1], 'uri': rel, 'pref_label': rel_label})
+            sorted_results = sorted(this_results, key=lambda tup: tup['pref_label'])
+            for sr in sorted_results:
+                relationships.append(sr)
+        return relationships
+
+    def matches(self):
+        """
+        punt for now
+        """
+        matches = []
+        matches_q = """ prefix skos: <http://www.w3.org/2004/02/skos/core#>
+                select ?exactmatch ?prop where
+                {
+                 <%s> dcterms:identifier ?identifier . ?identifier skos:semanticRelation ?exactMatch
+                }""" % self.concept
+
+        for m in graph.query(matches_q):
+            matches.append({'uri': m})
+        return matches
+
+    def rdf_types(self):
+        """
+        get the rdf types for this term
+        1 or more of concept, MicroThesaurus, etc
+        """
+        rdf_types = []
+        for t in graph.objects(subject=URIRef(self.concept), predicate=RDF.type):
+            rdf_types.append({'short_name': t.split('#')[1], 'uri': t})
+        return rdf_types
+
+    def language_labels(self):
+        """
+        get concept translations
+        """
+        return graph.preferredLabel(URIRef(self.concept))
 
 
 @app.route('/')
@@ -159,78 +275,23 @@ def term():
     uri = base_uri
     if uri_anchor:
         uri = base_uri + '#' + uri_anchor
-    pref_label = get_preferred_label(URIRef(uri), preferred_language)
-    pref_labels = graph.preferredLabel(URIRef(uri))
-    breadcrumbs = []
-    breadcrumbs_q = """
-            prefix skos: <http://www.w3.org/2004/02/skos/core#>
-            prefix eu: <http://eurovoc.europa.eu/schema#>
-            select ?domain ?microthesaurus where
-            {
-                {  ?domain skos:hasTopConcept ?microthesaurus . ?microthesaurus skos:narrower <%s> . }
-            union
-                { ?domain rdf:type eu:Domain . ?domain skos:hasTopConcept <%s> . }
-            }
-            """ % (uri, uri)
-    for res in graph.query(breadcrumbs_q):
-        bc = {}
-        bc.update({'domain': {'uri': res.domain, 'pref_label': get_preferred_label(res.domain, preferred_language)}})
-        if res.microthesaurus:
-            bc.update({
-                'microthesaurus':
-                {'uri': res.microthesaurus,
-                'pref_label': get_preferred_label(res.microthesaurus, preferred_language)}})
-        breadcrumbs.append(bc)
 
-    scope_notes = []
-    sns = graph.objects(subject=URIRef(uri), predicate=SKOS.scopeNote)
-    for s in sns:
-        if s.language == preferred_language:
-            scope_notes.append(s)
+    term = Term(uri, preferred_language)
 
-    alt_labels = []
-    als = graph.objects(subject=URIRef(uri), predicate=SKOS.altLabel)
-    for a in als:
-        if a.language == preferred_language:
-            alt_labels.append(a)
-
-    relationships = []
-    for c in [SKOS.broader, SKOS.related, SKOS.narrower, SKOS.member]:
-        this_results = []
-        for rel in graph.objects(subject=URIRef(uri), predicate=c):
-            rel_label = get_preferred_label(rel, preferred_language)
-            this_results.append({'type': c.split('#')[1], 'uri': rel, 'pref_label': rel_label})
-        sorted_results = sorted(this_results, key=lambda tup: tup['pref_label'])
-        for sr in sorted_results:
-            relationships.append(sr)
-
-    matches = []
-    # matches_q = """ prefix skos: <http://www.w3.org/2004/02/skos/core#>
-    #         select ?exactmatch ?prop where
-    #         {
-    #          <%s> dcterms:identifier ?identifier . ?identifier skos:exactMatch ?exactMatch
-    #         }""" % uri
-
-    # for m in graph.query(matches_q):
-    #     matches.append({'uri': m})
-
-    rdf_types = []
-    for t in graph.objects(subject=URIRef(uri), predicate=RDF.type):
-        rdf_types.append({'short_name': t.split('#')[1], 'uri': t})
-
+    relationships = term.relationships()
     count = len(relationships)
     rel = relationships[(int(page) - 1) * int(PER_PAGE):(int(page) - 1) * int(PER_PAGE) + int(PER_PAGE)]
     pagination = Pagination(page, PER_PAGE, count)
 
     return render_template('term.html',
-        rdf_types=rdf_types,
-        pref_label=pref_label,
-        pref_labels=pref_labels,
-        alt_labels=alt_labels,
-        breadcrumbs=breadcrumbs,
-        scope_notes=scope_notes,
+        rdf_types=term.rdf_types(),
+        pref_label=preferred_language,
+        pref_labels=term.language_labels(),
+        alt_labels=term.alt_labels(),
+        breadcrumbs=term.breadcrumbs(),
+        scope_notes=term.scope_notes(),
         relationships=rel,
-        matches=matches,
+        matches=term.matches(),
         lang=preferred_language,
         pagination=pagination)
 
