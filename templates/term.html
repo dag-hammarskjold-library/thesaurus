@@ -116,26 +116,28 @@
   <table class="table table-condensed">
   <tr>
     <th colspan="2" style="border-top:none">Language Equivalents</th></tr>
-    {% for label in pref_labels %}
-    <tr>
-      <td style="border-top:none">
-        {% if label.1.language %}
-          {% if label.1.language == lang %}
-            <b>{{ label.1.language|upper}}</b>
-          {% else %}
-            {{ label.1.language|upper}}
+    {% for elem in pref_labels %}
+      {% for label in elem %}
+      <tr>
+        <td style="border-top:none">
+          {% if label.1.language %}
+            {% if label.1.language == lang %}
+              <b>{{ label.1.language|upper}}</b>
+            {% else %}
+              {{ label.1.language|upper}}
+            {% endif %}
           {% endif %}
-        {% endif %}
-    </td>
-    <td style="border-top:none">
-    {% if label.1.language and label.1.language == lang %}
-      <b>{{ label.1.value }}</b>
-    {% else %}
-      {{ label.1.value }} 
-    {% endif %}
-    </td>
+      </td>
+      <td style="border-top:none">
+      {% if label.1.language and label.1.language == lang %}
+        <b>{{ label.1.value }}</b>
+      {% else %}
+        {{ label.1.value }} 
+      {% endif %}
+      </td>
+    {% endfor %}
   {% endfor %}
-  </tr>
+  </tr> 
   </table>
 </div>
 

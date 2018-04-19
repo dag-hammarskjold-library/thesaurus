@@ -97,6 +97,9 @@ class Term:
     def preferred_language(self):
         return self.lang
 
+    def preferred_label(self):
+        return get_preferred_label(self.concept, self.lang)
+
     def breadcrumbs(self):
         """
         get breadcumbs when a user clicks on a concept
@@ -172,7 +175,7 @@ class Term:
         """
         matches = []
         matches_q = """ prefix skos: <http://www.w3.org/2004/02/skos/core#>
-                select ?exactmatch ?prop where
+                select ?exactmatch where
                 {
                  <%s> dcterms:identifier ?identifier . ?identifier skos:semanticRelation ?exactMatch
                 }""" % self.concept
@@ -193,9 +196,12 @@ class Term:
 
     def language_labels(self):
         """
-        get concept translations
+        get and order concept translations
         """
-        return graph.preferredLabel(URIRef(self.concept))
+        labels = []
+        for lang in ['ar', 'zh', 'en', 'fr', 'ru', 'es']:
+            labels.append(graph.preferredLabel(URIRef(self.concept), lang=lang))
+        return labels
 
 
 @app.route('/')
@@ -285,7 +291,7 @@ def term():
 
     return render_template('term.html',
         rdf_types=term.rdf_types(),
-        pref_label=preferred_language,
+        pref_label=term.preferred_label(),
         pref_labels=term.language_labels(),
         alt_labels=term.alt_labels(),
         breadcrumbs=term.breadcrumbs(),

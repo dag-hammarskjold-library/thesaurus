@@ -13,6 +13,7 @@
     padding: .1em .25em;
     font-size: 150%;
 }
-p.pagination {
-    max-height: 20px;
+
+div.pagination {
+    height: 1px;
 }
