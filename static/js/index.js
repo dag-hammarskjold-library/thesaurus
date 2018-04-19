@@ -1,21 +1,4 @@
 $( document ).ready(function(){
-    function get_param(param){
-        var url_string = window.location.href;
-        var url = new URL(url_string);
-        var myParam = url.searchParams.get(param);
-        if(myParam){
-            return myParam;
-        } else {
-            return '';
-        }
-    }
-
-    function get_browser_language(){
-        var lang_locale = navigator.language;
-        var parts = lang_locale.split('-');
-        return parts[0];
-    }
-
     var xhr;
     var lang = get_param('lang');
     xhr = $('#autocomplete').autocomplete({
@@ -56,3 +39,20 @@ $( document ).ready(function(){
     });
 
 });
+
+function get_param(param){
+    var url_string = window.location.href;
+    var url = new URL(url_string);
+    var myParam = url.searchParams.get(param);
+    if(myParam){
+        return myParam;
+    } else {
+        return '';
+    }
+}
+
+function get_browser_language(){
+    var lang_locale = navigator.language;
+    var parts = lang_locale.split('-');
+    return parts[0];
+}
