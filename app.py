@@ -107,7 +107,6 @@ class Term:
         breadcrumbs = []
         breadcrumbs_q = """
             prefix skos: <http://www.w3.org/2004/02/skos/core#>
-            prefix eu: <http://eurovoc.europa.eu/schema#>
             select ?domain ?microthesaurus where
             {
                 {  ?domain skos:hasTopConcept ?microthesaurus . ?microthesaurus skos:narrower <%s> . }
@@ -175,6 +174,7 @@ class Term:
         """
         matches = []
         matches_q = """ prefix skos: <http://www.w3.org/2004/02/skos/core#>
+                        prefix eu: <http://data.europa.eu/eli/ontology#Format>
                 select ?exactmatch where
                 {
                  <%s> dcterms:identifier ?identifier . ?identifier skos:semanticRelation ?exactMatch
