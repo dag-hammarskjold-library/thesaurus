@@ -38,6 +38,7 @@ index_name = app.config.get('INDEX_NAME', None)
 es = Elasticsearch(elasticsearch_uri)
 
 EU = Namespace('http://eurovoc.europa.eu/schema#')
+DCTERMS = Namespace("http://purl.org/dc/terms#")
 UNBIST = Namespace('http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#')
 ROUTABLES = {
     'Concept': SKOS.Concept,
@@ -113,6 +114,14 @@ class Term:
         for r in res:
             scheme.append(r)
         return scheme
+
+    def identifier(self):
+        ident = []
+        q = "select ?id where { <%s> dcterms:identifier ?id .}" % self.concept
+        res = graph.query(q)
+        for r in res:
+            ident.append(r)
+        return ident
 
     def breadcrumbs(self):
         """
@@ -427,6 +436,8 @@ def serialize_data():
     in_scheme = term.scheme()
     notes = term.notes()
     scope_notes = term.scope_notes()
+    related = term.relationships()
+    identifier = term.identifier()
 
     from rdflib import Graph
     g = Graph()
@@ -438,13 +449,26 @@ def serialize_data():
     for l in alt_labels:
         g.add((node, SKOS.altLabel, l))
     for l in in_scheme:
-        g.add((node, SKOS.inScheme, Literal(l)))
+        g.add((node, SKOS.inScheme, URIRef(l[0])))
     for l in notes:
         g.add((node, SKOS.note, l))
     for l in scope_notes:
         g.add((node, SKOS.scopeNote, l))
+    for l in related:
+        if l.get('type') == 'broader':
+            g.add((node, SKOS.broader, URIRef(l.get('uri'))))
+        elif l.get('type') == 'narrower':
+            g.add((node, SKOS.narrower, URIRef(l.get('uri'))))
+        elif l.get('type') == 'related':
+            g.add((node, SKOS.related, URIRef(l.get('uri'))))
+        elif l.get('type') == 'member':
+            g.add((node, SKOS.member, URIRef(l.get('uri'))))
+    print("======================== {} ===============".format(identifier))
 
-    data = g.serialize(format=req_format)
+    g.add((node, DCTERMS.identifier, identifier[0][0]))
+    g.add((node, DCTERMS.identifier, URIRef(identifier[1][0])))
+
+    data = g.serialize(format=req_format, encoding='utf-8')
 
     file_ext = ''
     if req_format == 'turtle':
