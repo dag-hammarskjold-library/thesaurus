@@ -1,4 +1,30 @@
 $( document ).ready(function(){
+
+    var pref_lang = get_browser_language();
+    switch(pref_lang){
+        case 'ar':
+            highlightLang('ar');
+            break;
+        case 'zh':
+            highlightLang('zh');
+            break;
+        case 'en':
+            highlightLang('en');
+            break;
+        case 'fr':
+            highlightLang('fr');
+            break;
+        case 'ru':
+            highlightLang('ru');
+            break;
+        case 'es':
+            highlightLang('es');
+            break;
+        default:
+            highlightLang('en');
+            break;
+        }
+
     var xhr;
     var lang = get_param('lang');
     xhr = $('#autocomplete').autocomplete({
@@ -36,23 +62,24 @@ $( document ).ready(function(){
         var searchParams = new URLSearchParams(window.location.search);
         searchParams.set("lang", prefLang);
         window.location.search = searchParams.toString();
-    });
-
+    }); 
 });
 
 function get_param(param){
     var url_string = window.location.href;
     var url = new URL(url_string);
     var myParam = url.searchParams.get(param);
-    if(myParam){
-        return myParam;
-    } else {
-        return '';
-    }
+    return myParam;
 }
 
 function get_browser_language(){
     var lang_locale = navigator.language;
     var parts = lang_locale.split('-');
     return parts[0];
+}
+
+function highlightLang(lang){
+    var href = document.getElementById(lang);
+    console.log(href);
+    href.style.fontWeight = 'bold';
 }
