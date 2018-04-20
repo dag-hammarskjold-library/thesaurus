@@ -29,16 +29,15 @@
   <tbody>
     {% for term in context %}
     <tr>
-        <td> {{ term.uri_anchor }}</td>
         {% if lang %}
         <td>
             <a href="/term?lang={{lang}}&base_uri={{ term.base_uri }}&uri_anchor={{ term.uri_anchor }}">
-            {{ term.pref_label }}
+            {{ term.uri_anchor }} &#160;&#160;&#160; {{ term.pref_label }}
         </a></td>
         {% else %}
         <td>
             <a href="/term?lang=en&base_uri={{ term.base_uri }}&uri_anchor={{ term.uri_anchor }}">
-            {{ term.pref_label }}
+            {{ term.uri_anchor }} &#160;&#160;&#160; {{ term.pref_label }}
         </a></td>
         {% endif %}
     </tr>

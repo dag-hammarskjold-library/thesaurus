@@ -177,7 +177,7 @@ class Term:
                         prefix eu: <http://data.europa.eu/eli/ontology#Format>
                 select ?exactmatch where
                 {
-                 <%s> dcterms:identifier ?identifier . ?identifier skos:semanticRelation ?exactMatch
+                 <%s> dcterms:identifier ?identifier . ?identifier skos:exactMatch ?exactMatch
                 }""" % self.concept
 
         for m in graph.query(matches_q):
