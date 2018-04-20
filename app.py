@@ -1,3 +1,4 @@
+import io
 import json
 from redis import StrictRedis
 import re
@@ -7,7 +8,7 @@ from rdflib.store import Store
 from rdflib.namespace import SKOS
 from rdflib_sqlalchemy import registerplugins
 from flask import Flask
-from flask import render_template, abort, request, Response
+from flask import render_template, abort, request, Response, send_file
 from config import DevelopmentConfig
 from elasticsearch import Elasticsearch
 
@@ -15,10 +16,6 @@ registerplugins()
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
-
-# logger = logging.getLogger(__name__)
-# logging.basicConfig()
-# # logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 # setup graph object
 identifier = URIRef(app.config.get('IDENTIFIER', None))
@@ -83,7 +80,7 @@ class Pagination:
 
 
 class Term:
-    def __init__(self, concept, lang):
+    def __init__(self, concept, lang='en'):
         """
         @concept in a concept URI, e.g.
         https://metadata.un.org/thesaurus#1000463
@@ -99,6 +96,23 @@ class Term:
 
     def preferred_label(self):
         return get_preferred_label(self.concept, self.lang)
+
+    def preferred_labels(self):
+        return graph.preferredLabel(self.concept)
+
+    def notes(self):
+        notes = []
+        for rel in graph.objects(subject=URIRef(self.concept), predicate=SKOS.note):
+            notes.append(rel)
+        return notes
+
+    def scheme(self):
+        scheme = []
+        q = "select ?scheme where { <%s> skos:inScheme ?scheme .}" % self.concept
+        res = graph.query(q)
+        for r in res:
+            scheme.append(r)
+        return scheme
 
     def breadcrumbs(self):
         """
@@ -120,10 +134,10 @@ class Term:
                 {'domain':
                     {'uri': res.domain, 'pref_label': get_preferred_label(res.domain, self.lang)}})
             if res.microthesaurus:
-                bc.update({
-                    'microthesaurus':
-                    {'uri': res.microthesaurus,
-                    'pref_label': get_preferred_label(res.microthesaurus, self.lang)}})
+                bc.update(
+                    {'microthesaurus':
+                        {'uri': res.microthesaurus,
+                        'pref_label': get_preferred_label(res.microthesaurus, self.lang)}})
             breadcrumbs.append(bc)
         return breadcrumbs
 
@@ -173,12 +187,13 @@ class Term:
         punt for now
         """
         matches = []
-        matches_q = """ prefix skos: <http://www.w3.org/2004/02/skos/core#>
-                        prefix eu: <http://data.europa.eu/eli/ontology#Format>
-                select ?exactmatch where
-                {
-                 <%s> dcterms:identifier ?identifier . ?identifier skos:exactMatch ?exactMatch
-                }""" % self.concept
+        matches_q = """
+            prefix skos: <http://www.w3.org/2004/02/skos/core#>
+            select ?exactmatch where
+            {
+            <%s> dcterms:identifier ?identifier . ?identifier skos:exactMatch ?exactMatch
+            }""" % self.concept
+        # matches_q = """select ?evTerm where { ?evTerm skos:exactMatch ?id . ?unbisTerm dcterms:identifier ?id }"""
 
         for m in graph.query(matches_q):
             matches.append({'uri': m})
@@ -202,6 +217,12 @@ class Term:
         for lang in ['ar', 'zh', 'en', 'fr', 'ru', 'es']:
             labels.append(graph.preferredLabel(URIRef(self.concept), lang=lang))
         return labels
+
+
+@app.errorhandler(400)
+def custom400(error):
+    response = 'ERROR: ' + error.description['message']
+    return response
 
 
 @app.route('/')
@@ -241,8 +262,6 @@ def index():
         order by ?prefLabel
         LIMIT %s OFFSET %s""" % (
             str(aspect_uri), preferred_language, int(PER_PAGE), (int(page) - 1) * int(PER_PAGE))
-
-    app.logger.debug(q)
 
     for res in graph.query(q):
         res_label = res[1]
@@ -312,6 +331,7 @@ def search():
     if not preferred_language:
         app.logger.error("No language set in search view!")
         abort(500)
+    page = request.args.get('page', '1')
 
     match = es.search(
         index=index_name,
@@ -322,20 +342,23 @@ def search():
     if count == 0:
         resp = ["No Matches"]
         return render_template('search.html', results=resp, lang=preferred_language)
-    resp = []
+    response = []
     for m in match['hits']['hits']:
-        resp.append({
+        response.append({
             'score': m['_score'],
             'pref_label': get_preferred_label(URIRef(m["_source"]["uri"]), preferred_language),
             'uri': m["_source"]["uri"]
         }
         )
+    resp = response[(int(page) - 1) * int(PER_PAGE):(int(page) - 1) * int(PER_PAGE) + int(PER_PAGE)]
+    pagination = Pagination(page, PER_PAGE, len(response))
 
     return render_template(
         'search.html',
         results=resp,
         query=query,
-        lang=preferred_language)
+        lang=preferred_language,
+        pagination=pagination)
 
 
 @app.route('/autocomplete')
@@ -381,6 +404,61 @@ def autocomplete():
         })
 
     return Response(json.dumps(results), content_type='application/json')
+
+
+@app.route('/api')
+def serialize_data():
+    uri_anchor = request.args.get('uri_anchor')
+    base_uri = request.args.get('base_uri')
+    req_format = request.args.get('format')
+    req_format = req_format.lower()
+    if req_format.lower() not in ['xml',
+        'n3', 'turtle', 'nt',
+        'pretty-xml', 'trix',
+            'trig', 'nquads']:
+        abort(400, {"message": "Unsuported serialization format: {}".format(req_format)})
+
+    uri = base_uri + "#" + uri_anchor
+    node = Literal(uri)
+    term = Term(URIRef(uri))
+    pref_labels = term.preferred_labels()
+    scope_notes = term.scope_notes()
+    alt_labels = term.alt_labels()
+    in_scheme = term.scheme()
+    notes = term.notes()
+    scope_notes = term.scope_notes()
+
+    from rdflib import Graph
+    g = Graph()
+    g.bind('skos', SKOS)
+
+    g.add((node, RDF.type, SKOS.Concept))
+    for l in pref_labels:
+        g.add((node, SKOS.prefLabel, l[1]))
+    for l in alt_labels:
+        g.add((node, SKOS.altLabel, l))
+    for l in in_scheme:
+        g.add((node, SKOS.inScheme, Literal(l)))
+    for l in notes:
+        g.add((node, SKOS.note, l))
+    for l in scope_notes:
+        g.add((node, SKOS.scopeNote, l))
+
+    data = g.serialize(format=req_format)
+
+    file_ext = ''
+    if req_format == 'turtle':
+        file_ext = 'ttl'
+    elif req_format == 'pretty-xml':
+        file_ext = 'xml'
+    else:
+        file_ext = req_format
+
+    return send_file(
+        io.BytesIO(data),
+        attachment_filename='{}.{}'.format(uri_anchor, file_ext),
+        as_attachment=True
+    )
 
 
 def get_preferred_label(resource, language):

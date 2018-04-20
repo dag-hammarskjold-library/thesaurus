@@ -25,6 +25,7 @@
 {% endmacro %}
 
 <p> {{ render_pagination(pagination) }} </p>
+
 <table class="table table-hover">
   <tbody>
     {% for term in context %}
@@ -32,12 +33,12 @@
         {% if lang %}
         <td>
             <a href="/term?lang={{lang}}&base_uri={{ term.base_uri }}&uri_anchor={{ term.uri_anchor }}">
-            {{ term.uri_anchor }} &#160;&#160;&#160; {{ term.pref_label }}
+            {{ term.pref_label }}
         </a></td>
         {% else %}
         <td>
             <a href="/term?lang=en&base_uri={{ term.base_uri }}&uri_anchor={{ term.uri_anchor }}">
-            {{ term.uri_anchor }} &#160;&#160;&#160; {{ term.pref_label }}
+            {{ term.pref_label }}
         </a></td>
         {% endif %}
     </tr>

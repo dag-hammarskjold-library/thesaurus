@@ -43,10 +43,11 @@
     <ol class="breadcrumb">
       {% for b in breadcrumbs %}
       {% set uri_parts = b.domain.uri.split('#') %}
-        <li><a href="/term?lang={{lang}}&base_uri={{uri_parts.0}}&uri_anchor={{uri_parts.1}}">{{b.domain.pref_label}}</a></li>
+        <li><a href="/term?lang={{lang}}&base_uri={{uri_parts.0}}&uri_anchor={{uri_parts.1}}">
+          {{b.domain.pref_label}}</a></li>
       {% if b.microthesaurus %}
-        {% set muri_parts = b.microthesaurus.uri.split('#') %}
-          <li><a href="/term?lang={{lang}}&base_uri={{ muri_parts.0 }}&uri_anchor={{ muri_parts.1}}">
+        {% set uri_parts = b.microthesaurus.uri.split('#') %}
+          <li><a href="/term?lang={{lang}}&base_uri={{ uri_parts.0 }}&uri_anchor={{ uri_parts.1}}">
           {{ b.microthesaurus.pref_label }}</a></li>
       {% endif %}
       {% endfor %}
