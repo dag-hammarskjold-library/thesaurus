@@ -1,30 +1,43 @@
 $( document ).ready(function(){
-
-    var pref_lang = get_browser_language();
-    switch(pref_lang){
-        case 'ar':
-            highlightLang('ar');
-            break;
-        case 'zh':
-            highlightLang('zh');
-            break;
-        case 'en':
-            highlightLang('en');
-            break;
-        case 'fr':
-            highlightLang('fr');
-            break;
-        case 'ru':
-            highlightLang('ru');
-            break;
-        case 'es':
-            highlightLang('es');
-            break;
-        default:
-            highlightLang('en');
-            break;
+    /* if lang is not set in uri,
+     get the browser language
+     and set lang parmeter
+     default to en 
+    */
+    var lang = get_param('lang');
+    if ( ! lang ){
+        var pref_lang = get_browser_language();
+        switch(pref_lang){
+            case 'ar':
+                setDefaultLang('ar');
+                break;
+            case 'zh':
+                setDefaultLang('zh');
+                break;
+            case 'en':
+                setDefaultLang('en');
+                break;
+            case 'fr':
+                setDefaultLang('fr');
+                break;
+            case 'ru':
+                setDefaultLang('ru');
+                break;
+            case 'es':
+                setDefaultLang('es');
+                break;
+            default:
+                setDefaultLang('en');
+                break;
+            }
         }
 
+    /* autocomplete functionality
+     want to grab characters typed into search form
+     and pass them via ajax to the search method
+     if search method returns results, add
+     to select area under form
+    */
     var xhr;
     var lang = get_param('lang');
     xhr = $('#autocomplete').autocomplete({
@@ -53,6 +66,9 @@ $( document ).ready(function(){
         }
     });
 
+    /* when click on a language
+        translate whole page
+    */
     $(".lang").on("click", function(e){
         e.preventDefault();
         var currentURL = window.location.href;
@@ -78,8 +94,11 @@ function get_browser_language(){
     return parts[0];
 }
 
-function highlightLang(lang){
-    var href = document.getElementById(lang);
-    console.log(href);
-    href.style.fontWeight = 'bold';
+function setDefaultLang(lang){
+    // var href = document.getElementById(lang);
+    // console.log(href);
+    // href.style.fontWeight = 'bold';
+    var searchParams = new URLSearchParams(window.location.search);
+    searchParams.set("lang", lang);
+    window.location.search = searchParams.toString();
 }
