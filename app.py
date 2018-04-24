@@ -435,6 +435,7 @@ def autocomplete():
 def serialize_data():
     uri_anchor = request.form.get('uri_anchor')
     base_uri = request.form.get('base_uri')
+
     req_format = request.form.get('format')
     target = request.form.get('dl_location')
     req_format = req_format.lower()
@@ -442,7 +443,10 @@ def serialize_data():
         'n3', 'turtle', 'nt',
         'pretty-xml', 'trix',
             'trig']:
-        abort(400, {"message": "Unsuported serialization format: {}".format(req_format)})
+            abort(400, {"message": "Unsuported serialization format: {}".format(req_format)})
+
+    if req_format == 'xml':
+        req_format = 'pretty-xml'
 
     uri = base_uri + "#" + uri_anchor
     node = Literal(uri)
