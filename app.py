@@ -433,10 +433,10 @@ def autocomplete():
 
 @app.route('/api', methods=['GET', 'POST'])
 def serialize_data():
-    print(request)
-    uri_anchor = request.args.get('uri_anchor')
-    base_uri = request.args.get('base_uri')
-    req_format = request.args.get('format')
+    uri_anchor = request.form.get('uri_anchor')
+    base_uri = request.form.get('base_uri')
+    req_format = request.form.get('format')
+    target = request.form.get('dl_location')
     req_format = req_format.lower()
     if req_format.lower() not in ['xml',
         'n3', 'turtle', 'nt',
@@ -496,10 +496,16 @@ def serialize_data():
     else:
         file_ext = req_format
 
+    as_attachment = None
+    if target == "download":
+        as_attachment = True
+    else:
+        as_attachment = False
+
     return send_file(
         io.BytesIO(data),
         attachment_filename='{}.{}'.format(uri_anchor, file_ext),
-        as_attachment=True
+        as_attachment=as_attachment
     )
 
 

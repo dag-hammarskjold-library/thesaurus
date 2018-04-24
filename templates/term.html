@@ -53,8 +53,9 @@
               <form method="POST" action="/api" id="post-api" enctype="multipart/form-data">
                 <label>Node</label>
                 <input type="text" name="base_uri" value="{{request.args.get('base_uri')}}">
-                <input type="text" name="uri_anchor" value="{{request.args. get('uri_anchor')}}">
+                <input type="text" name="uri_anchor" value="{{request.args.get('uri_anchor')}}">
                   <br>
+                  <hr>
                 <label>Format</label>
                 <select name="format" form="post-api">
                   <option value="turtle">Turtle</option>
@@ -63,11 +64,14 @@
                   <option value="nt">nt</option>
                   <option value="trix">trix</option>
                 </select>
-
+                <hr>
                 <br>
                 <label>Download or Print to Screen?</label>
-                <input type="checkbox" name="dl-location" value="onScreen" checked>
-                <input type="checkbox" name="dl-location" value="fileDownload">
+                <br>
+                <input type="radio" name="dl_location" value="on_screen" checked> Show on Screen
+                <br>
+                <input type="radio" name="dl_location" value="download"> As download
+                <hr>
                 <button type="submit" class="btn btn-success center-block">Submit</button>
               </form>
           </div>

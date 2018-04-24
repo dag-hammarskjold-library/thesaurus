@@ -17,3 +17,10 @@
 div.pagination {
     height: 1px;
 }
+
+.modal-content {
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
