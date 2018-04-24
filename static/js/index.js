@@ -1,4 +1,25 @@
 $( document ).ready(function(){
+
+    /* 
+    set crsf protection
+    */
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+var csrftoken = getCookie('csrftoken');
     /* if lang is not set in uri,
      get the browser language
      and set lang parmeter
@@ -78,7 +99,13 @@ $( document ).ready(function(){
         var searchParams = new URLSearchParams(window.location.search);
         searchParams.set("lang", prefLang);
         window.location.search = searchParams.toString();
-    }); 
+    });
+
+    // show API dialog
+    $("#getNode").on("click", function(e){
+        $("#show-dl-options").modal("show");
+    });
+
 });
 
 function get_param(param){

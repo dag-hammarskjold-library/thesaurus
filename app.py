@@ -123,6 +123,22 @@ class Term:
             ident.append(r)
         return ident
 
+    def top_concept_of(self):
+        c = []
+        q = "select ?id where { <%s> skos:hasTopConcept ?id . }" % self.concept
+        res = graph.query(q)
+        for r in res:
+            c.append(r)
+        return c
+
+    def title(self):
+        title = []
+        q = "select ?id where { <%s> dcterms:title ?id .}" % self.concept
+        res = graph.query(q)
+        for r in res:
+            title.append(r)
+        return title
+
     def breadcrumbs(self):
         """
         get breadcumbs when a user clicks on a concept
@@ -415,8 +431,9 @@ def autocomplete():
     return Response(json.dumps(results), content_type='application/json')
 
 
-@app.route('/api')
+@app.route('/api', methods=['GET', 'POST'])
 def serialize_data():
+    print(request)
     uri_anchor = request.args.get('uri_anchor')
     base_uri = request.args.get('base_uri')
     req_format = request.args.get('format')
@@ -424,7 +441,7 @@ def serialize_data():
     if req_format.lower() not in ['xml',
         'n3', 'turtle', 'nt',
         'pretty-xml', 'trix',
-            'trig', 'nquads']:
+            'trig']:
         abort(400, {"message": "Unsuported serialization format: {}".format(req_format)})
 
     uri = base_uri + "#" + uri_anchor
@@ -463,10 +480,11 @@ def serialize_data():
             g.add((node, SKOS.related, URIRef(l.get('uri'))))
         elif l.get('type') == 'member':
             g.add((node, SKOS.member, URIRef(l.get('uri'))))
-    print("======================== {} ===============".format(identifier))
 
-    g.add((node, DCTERMS.identifier, identifier[0][0]))
-    g.add((node, DCTERMS.identifier, URIRef(identifier[1][0])))
+    app.logger.info("================================= {} ======================".format(identifier))
+    if(len(identifier)):
+        g.add((node, DCTERMS.identifier, identifier[0][0]))
+        g.add((node, DCTERMS.identifier, URIRef(identifier[1][0])))
 
     data = g.serialize(format=req_format, encoding='utf-8')
 

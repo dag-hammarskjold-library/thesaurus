@@ -39,6 +39,40 @@
         {% endif %}
       {% endfor %}
     </h2>
+    <span class="download pull-right">
+      <!-- <a href="/api?base_uri={{request.args.get('base_uri')}}&uri_anchor={{request.args.get('uri_anchor')}}&format=turtle">DL</a> -->
+      <img src="static/img/download-button-icon-27698.png" style="width:30px;height:30px;" alt="dl" id="getNode">
+    </span>
+    <div class="modal fade" id="show-dl-options" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+              <i class="fa fa-times close-dl-dialog" aria-hidden="true"></i>
+              <div class="form-ribbon">
+                <h5 class="form-ribbon-heading"></h5>
+              </div>
+              <form method="POST" action="/api" id="post-api" enctype="multipart/form-data">
+                <label>Node</label>
+                <input type="text" name="base_uri" value="{{request.args.get('base_uri')}}">
+                <input type="text" name="uri_anchor" value="{{request.args. get('uri_anchor')}}">
+                  <br>
+                <label>Format</label>
+                <select name="format" form="post-api">
+                  <option value="turtle">Turtle</option>
+                  <option value="xml">XML</option>
+                  <option value="n3">n3</option>
+                  <option value="nt">nt</option>
+                  <option value="trix">trix</option>
+                </select>
+
+                <br>
+                <label>Download or Print to Screen?</label>
+                <input type="checkbox" name="dl-location" value="onScreen" checked>
+                <input type="checkbox" name="dl-location" value="fileDownload">
+                <button type="submit" class="btn btn-success center-block">Submit</button>
+              </form>
+          </div>
+        </div>
+    </div>
     
     <ol class="breadcrumb">
       {% for b in breadcrumbs %}
