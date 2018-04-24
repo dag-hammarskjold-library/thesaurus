@@ -38,11 +38,12 @@
         <a href="/?lang=en&aspect={{ t.short_name }}"><span class="badge">{{ t.short_name }}</span></a>
         {% endif %}
       {% endfor %}
-    </h2>
-    <span class="download pull-right">
+      <span class="download pull-right">
       <!-- <a href="/api?base_uri={{request.args.get('base_uri')}}&uri_anchor={{request.args.get('uri_anchor')}}&format=turtle">DL</a> -->
       <img src="static/img/download-button-icon-27698.png" style="width:30px;height:30px;" alt="dl" id="getNode">
     </span>
+    </h2>
+    
     <div class="modal fade" id="show-dl-options" role="dialog">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -59,7 +60,7 @@
                   <hr>
                 <label>Format</label>
                 <select name="format" form="post-api">
-                  <option value="turtle">Turtle</option>
+                  <option selected="selected" value="turtle">Turtle</option>
                   <!-- <option value="xml">XML</option> -->
                   <option value="pretty-xml">XML</option>
                   <option value="n3">n3</option>

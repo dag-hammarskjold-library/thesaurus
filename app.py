@@ -431,24 +431,22 @@ def autocomplete():
     return Response(json.dumps(results), content_type='application/json')
 
 
+# FIXME -- N3 format always downloads
 @app.route('/api', methods=['GET', 'POST'])
 def serialize_data():
-    uri_anchor = request.form.get('uri_anchor')
     base_uri = request.form.get('base_uri')
-
+    uri_anchor = request.form.get('uri_anchor')
     req_format = request.form.get('format')
     target = request.form.get('dl_location')
     req_format = req_format.lower()
     if req_format.lower() not in ['xml',
-        'n3', 'turtle', 'nt',
-        'pretty-xml', 'trix',
-            'trig']:
+        'n3', 'turtle', 'nt', 'pretty-xml']:
             abort(400, {"message": "Unsuported serialization format: {}".format(req_format)})
 
     if req_format == 'xml':
         req_format = 'pretty-xml'
 
-    uri = base_uri + "#" + uri_anchor
+    uri = base_uri + '#' + uri_anchor
     node = Literal(uri)
     term = Term(URIRef(uri))
     pref_labels = term.preferred_labels()
@@ -485,7 +483,8 @@ def serialize_data():
         elif l.get('type') == 'member':
             g.add((node, SKOS.member, URIRef(l.get('uri'))))
 
-    app.logger.info("================================= {} ======================".format(identifier))
+    # this shows up as ns1.identifier
+    # ???
     if(len(identifier)):
         g.add((node, DCTERMS.identifier, identifier[0][0]))
         g.add((node, DCTERMS.identifier, URIRef(identifier[1][0])))
