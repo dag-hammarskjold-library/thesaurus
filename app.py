@@ -439,8 +439,7 @@ def serialize_data():
     req_format = request.form.get('format')
     target = request.form.get('dl_location')
     req_format = req_format.lower()
-    if req_format.lower() not in ['xml',
-        'n3', 'turtle', 'nt', 'pretty-xml']:
+    if req_format.lower() not in ['xml', 'n3', 'turtle', 'nt', 'pretty-xml']:
             abort(400, {"message": "Unsuported serialization format: {}".format(req_format)})
 
     if req_format == 'xml':
