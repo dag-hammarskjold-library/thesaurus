@@ -447,7 +447,7 @@ def serialize_data():
     target = request.form.get('dl_location')
     req_format = req_format.lower()
     if req_format.lower() not in ['xml', 'n3', 'turtle', 'nt', 'pretty-xml']:
-            abort(400, {"message": "Unsuported serialization format: {}".format(req_format)})
+        abort(400, {"message": "Unsuported serialization format: {}".format(req_format)})
 
     if req_format == 'xml':
         req_format = 'pretty-xml'
@@ -501,7 +501,8 @@ def serialize_data():
         g.add((node, DCTERMS.title, Literal(i[0])))
 
     if top_concept:
-        g.add((node, SKOS.topConceptOf, Literal(top_concept[0])))
+        print(top_concept[0][0])
+        g.add((node, SKOS.topConceptOf, URIRef(top_concept[0][0])))
 
     data = g.serialize(format=req_format, encoding='utf-8')
 
