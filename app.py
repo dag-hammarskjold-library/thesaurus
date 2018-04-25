@@ -81,12 +81,14 @@ class Pagination:
 
 
 class Term:
-    def __init__(self, concept, lang='en'):
+    def __init__(self, concept, lang=None):
         """
         @concept in a concept URI, e.g.
         https://metadata.un.org/thesaurus#1000463
 
         @lang is the preferred language of the interface
+        if lang in None, want all prefLabel, altLabels
+        scope_notes for this URI
         """
         self.concept = concept
         self.lang = lang
@@ -174,7 +176,10 @@ class Term:
         scope_notes = []
         sns = graph.objects(subject=URIRef(self.concept), predicate=SKOS.scopeNote)
         for s in sns:
-            if s.language == self.lang:
+            if self.lang:
+                if s.language == self.lang:
+                    scope_notes.append(s)
+            else:
                 scope_notes.append(s)
         return scope_notes
 
@@ -187,7 +192,10 @@ class Term:
         alt_labels = []
         als = graph.objects(subject=URIRef(self.concept), predicate=SKOS.altLabel)
         for a in als:
-            if a.language == self.lang:
+            if self.lang:
+                if a.language == self.lang:
+                    alt_labels.append(a)
+            else:
                 alt_labels.append(a)
         return alt_labels
 
@@ -326,7 +334,7 @@ def term():
     if uri_anchor:
         uri = base_uri + '#' + uri_anchor
 
-    term = Term(uri, preferred_language)
+    term = Term(uri, lang=preferred_language)
 
     relationships = term.relationships()
     count = len(relationships)
@@ -455,6 +463,8 @@ def serialize_data():
     scope_notes = term.scope_notes()
     related = term.relationships()
     identifier = term.identifier()
+    title = term.title()
+    top_concept = term.top_concept_of()
 
     from rdflib import Graph
     g = Graph()
@@ -486,6 +496,12 @@ def serialize_data():
     if(len(identifier)):
         g.add((node, DCTERMS.identifier, identifier[0][0]))
         g.add((node, DCTERMS.identifier, URIRef(identifier[1][0])))
+
+    for i in title:
+        g.add((node, DCTERMS.title, Literal(i[0])))
+
+    if top_concept:
+        g.add((node, SKOS.topConceptOf, top_concept))
 
     data = g.serialize(format=req_format, encoding='utf-8')
 
