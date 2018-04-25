@@ -13,7 +13,7 @@ class Config:
     )
     IDENTIFIER = 'thesaurus'
     LANGUAGE_CODE = 'en'
-    PER_PAGE = 20
+    PER_PAGE = 25
     ELASTICSEARCH_URI = "http://127.0.0.1:9200/"
     INDEX_NAME = 'thesaurus'
     REDIS_HOST = 'localhost'

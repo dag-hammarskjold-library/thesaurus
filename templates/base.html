@@ -9,9 +9,13 @@
      <!-- <link rel="icon" href="../../favicon.ico"> -->
  
      <title>UN Thesaurus</title>
+     <link rel="shortcut icon" href="/static/img/favicon.png", filename='favicon.png'>
  
      <!-- Bootstrap core CSS -->
      <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+
+     <!-- popper.js -->
+     <link href="https://unpkg.com/tooltip.js/dist/umd/tooltip.min.js" rel="stylesheet">
      
      <!-- jQueryUI css -->
      <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
@@ -49,19 +53,23 @@
  </head>
 <body>
     <nav class="navbar navbar-default">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-navbar" aria-expanded="false">
+      <div class="navbar-header">
+        <img src="static/img/dhl.png" style="width:65px;height:65px;">
+    </div>
+
+            <!-- <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-navbar" aria-expanded="false">
           <span class="sr-only">Toggle navigation</span>
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
-        </button>
+        </button> -->
         <!-- translate this and also make it change based on the app that's chosen -->
         {% if lang %}
         <a class="navbar-brand" href="/?lang={{lang}}&aspect=MicroThesaurus">UNBIS Thesaurus</a>
         {% else %}
         <a class="navbar-brand" href="/?lang=en&aspect=MicroThesaurus">UNBIS Thesaurus</a>
         {% endif %}
-        <div class="collapse navbar-collapse" id="main-navbar"> 
+        <div class="collapse navbar-collapse" id="main-navbar">
         <ul class="nav navbar-nav">
         </ul>
         <ul class="nav navbar-nav pull-right">
@@ -73,22 +81,34 @@
           <li><a id="es" class="lang" href="#">Español</a></li>
         </ul>
       </div>
+    </div>
     </nav>
+
 
     <div class="container">
         <ul class="nav nav-tabs">
             {% if lang %}
-            <li role="presentation"><a href="/?aspect=MicroThesaurus&lang={{lang}}">Browse Categories</a></li>
+            <li>
+              <input type="button" class="btn btn-default" onclick="location.href = '/?aspect=MicroThesaurus&lang={{lang}}'"
+            value="Browse Categories"> &nbsp;
+            </li>
             {% else %}
-            <li role="presentation"><a href="/?aspect=MicroThesaurus&lang=en">Browse Categories</a></li>
+            <li>
+              <input type="button" class="btn btn-default" onclick="location.href = '/?aspect=MicroThesaurus&lang=en'" value="Browse Categories"> &nbsp; 
+            </li>
             {% endif %}
             {% if lang %}
-            <li role="presentation"><a href="/?aspect=Concept&lang={{lang}}">Browse Concepts</a></li>
+            <li>
+              <input type="button" class="btn btn-default" onclick="location.href='/?aspect=Concept&lang={{lang}}'" value="Browse Concepts"> &nbsp;
+            </li>
             {% else %}
-            <li role="presentation"><a href="/?aspect=Concept&lang=en">Browse Concepts</a></li>
+            <li>
+              <input type="button" class="btn btn-default" onclick="location.href='/?aspect=Concept&lang=en'" value="Browse Concepts"> &nbsp;
+            </li>
             {% endif %}
-            <li role="presentation"><a href="#">Request a Copy</a></li>
-            <li role="presentation"><a href="#">About</a></li>
+
+            <!-- <li role="presentation"><a href="#">Request a Copy</a></li>
+            <li role="presentation"><a href="#">About</a></li> -->
             <form class="navbar-form navbar-right" role="search" method="get" action="/search">
                 <input type="text" class="form-control" id="autocomplete" name="q">
                 <input type="hidden" name="lang" value={{lang}} id="lang-input">

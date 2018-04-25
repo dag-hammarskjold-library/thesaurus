@@ -39,8 +39,13 @@
         {% endif %}
       {% endfor %}
       <span class="download pull-right">
-      <!-- <a href="/api?base_uri={{request.args.get('base_uri')}}&uri_anchor={{request.args.get('uri_anchor')}}&format=turtle">DL</a> -->
-      <img src="static/img/download-button-icon-27698.png" style="width:30px;height:30px;" alt="dl" id="getNode">
+      <img 
+        src="static/img/download-button-icon-27698.png" 
+        style="width:30px;height:30px;" 
+        alt="dl" 
+        id="getNode"
+        data-toggle="tooltip"
+        title="Download data for this URI">
     </span>
     </h2>
     
@@ -192,6 +197,5 @@
 </p>
 {% endif %}
 
-
-
+ 
 {% endblock %}

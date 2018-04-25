@@ -431,7 +431,6 @@ def autocomplete():
     return Response(json.dumps(results), content_type='application/json')
 
 
-# FIXME -- N3 format always downloads
 @app.route('/api', methods=['GET', 'POST'])
 def serialize_data():
     base_uri = request.form.get('base_uri')
