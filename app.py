@@ -127,7 +127,7 @@ class Term:
 
     def top_concept_of(self):
         c = []
-        q = "select ?id where { <%s> skos:hasTopConcept ?id . }" % self.concept
+        q = "select ?id where { <%s> skos:topConceptOf ?id . }" % self.concept
         res = graph.query(q)
         for r in res:
             c.append(r)
@@ -501,7 +501,7 @@ def serialize_data():
         g.add((node, DCTERMS.title, Literal(i[0])))
 
     if top_concept:
-        g.add((node, SKOS.topConceptOf, top_concept))
+        g.add((node, SKOS.topConceptOf, Literal(top_concept[0])))
 
     data = g.serialize(format=req_format, encoding='utf-8')
 
