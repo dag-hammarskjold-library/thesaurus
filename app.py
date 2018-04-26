@@ -501,7 +501,6 @@ def serialize_data():
         g.add((node, DCTERMS.title, Literal(i[0])))
 
     if top_concept:
-        print(top_concept[0][0])
         g.add((node, SKOS.topConceptOf, URIRef(top_concept[0][0])))
 
     data = g.serialize(format=req_format, encoding='utf-8')
