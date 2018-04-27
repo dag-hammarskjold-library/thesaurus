@@ -32,3 +32,7 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     DEBUG = True
+
+
+class AWSConfig(Config):
+    DEBUG = True

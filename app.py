@@ -416,7 +416,6 @@ def autocomplete():
        }
      }""" % (q, preferred_language, preferred_language)
 
-    app.logger.debug("Looking at labels_{}".format(preferred_language))
     match = es.search(index='thesaurus', body=dsl_q, size=20)
     results = []
     for res in match["hits"]["hits"]:
@@ -446,15 +445,15 @@ def serialize_data():
     req_format = request.form.get('format')
     target = request.form.get('dl_location')
     req_format = req_format.lower()
-    if req_format.lower() not in ['xml', 'n3', 'turtle', 'nt', 'pretty-xml']:
+    if req_format.lower() not in ['xml', 'n3', 'turtle', 'nt', 'pretty-xml', 'json-ld']:
         abort(400, {"message": "Unsuported serialization format: {}".format(req_format)})
 
     if req_format == 'xml':
         req_format = 'pretty-xml'
 
     uri = base_uri + '#' + uri_anchor
-    node = Literal(uri)
-    term = Term(URIRef(uri))
+    node = URIRef(uri)
+    term = Term(node)
     pref_labels = term.preferred_labels()
     scope_notes = term.scope_notes()
     alt_labels = term.alt_labels()
@@ -468,7 +467,6 @@ def serialize_data():
 
     from rdflib import Graph
     g = Graph()
-    g.bind('skos', SKOS)
 
     g.add((node, RDF.type, SKOS.Concept))
     for l in pref_labels:
@@ -491,8 +489,7 @@ def serialize_data():
         elif l.get('type') == 'member':
             g.add((node, SKOS.member, URIRef(l.get('uri'))))
 
-    # this shows up as ns1.identifier
-    # ???
+    # this shows up as ns1.identifier ???
     if(len(identifier)):
         g.add((node, DCTERMS.identifier, identifier[0][0]))
         g.add((node, DCTERMS.identifier, URIRef(identifier[1][0])))
@@ -503,13 +500,19 @@ def serialize_data():
     if top_concept:
         g.add((node, SKOS.topConceptOf, URIRef(top_concept[0][0])))
 
-    data = g.serialize(format=req_format, encoding='utf-8')
+    data = b''
+    if req_format != 'json-ld':
+        data = g.serialize(format=req_format, encoding='utf-8')
+    else:
+        data = g.serialize(format="json-ld", indent=4)
 
     file_ext = ''
     if req_format == 'turtle':
         file_ext = 'ttl'
     elif req_format == 'pretty-xml':
         file_ext = 'xml'
+    elif req_format == 'json-ld':
+        file_ext = 'json'
     else:
         file_ext = req_format
 
