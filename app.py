@@ -366,11 +366,7 @@ def search():
         abort(500)
     page = request.args.get('page', '1')
 
-    match = es.search(
-        index=index_name,
-        q=query,
-        size=50,
-        _source=['labels_{}'.format(preferred_language), 'uri'])
+    match = query_es(query, preferred_language, 50)
     count = len(match)
     if count == 0:
         resp = ["No Matches"]
@@ -403,20 +399,7 @@ def autocomplete():
     if not preferred_language:
         abort(500)
 
-    # match against label and alt label for
-    # the preferred language
-    # boost preferred label
-    dsl_q = """
-     {
-       "query": {
-         "multi_match" : {
-           "query":    "%s",
-           "fields": [ "labels_%s^3", "alt_labels_%s" ]
-         }
-       }
-     }""" % (q, preferred_language, preferred_language)
-
-    match = es.search(index='thesaurus', body=dsl_q, size=20)
+    match = query_es(q, preferred_language, 20)
     results = []
     for res in match["hits"]["hits"]:
         if not res["_source"].get("labels_%s" % preferred_language):
@@ -608,3 +591,23 @@ def get_concepts(page, lang='en'):
         aspect="Concept",
         page=page,
         pagination=pagination)
+
+
+def query_es(query, lang, max_hits):
+    """
+    match against label and alt label for
+    the preferred language
+    boost preferred label
+    """
+    app.logger.debug("Match {} against labels_{} and alt_labels_{}".format(query, lang, lang))
+    dsl_q = """
+     {
+       "query": {
+         "multi_match" : {
+           "query":    "%s",
+           "fields": [ "labels_%s^3", "alt_labels_%s" ]
+         }
+       }
+     }""" % (query, lang, lang)
+    match = es.search(index='thesaurus', body=dsl_q, size=max_hits)
+    return match
