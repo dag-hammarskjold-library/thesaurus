@@ -85,6 +85,11 @@
         </div>
     </div>
     
+    {% if lang == 'ar' %}
+      {% set direction = "rtl" -%}
+    {% else %}
+      {% set direction = "ltr" -%}
+    {% endif %}
     <ol class="breadcrumb">
       {% for b in breadcrumbs %}
       {% set uri_parts = b.domain.uri.split('#') %}
@@ -101,11 +106,12 @@
   </div>
 </div>
 
+
 {% if scope_notes|length > 0 %}
   <table class="table table-condensed">
     {% for sn in scope_notes %}
       <tr class="info">
-          <td style="border-top:none">SN</td><td style="border-top:none">{{ sn.value }}</td>
+          <td dir={{direction}} style="border-top:none">SN</td><td dir={{direction}} style="border-top:none">{{ sn.value }}</td>
       </tr>
     {% endfor %}
   </table>
@@ -115,8 +121,8 @@
   <table class="table table-condensed">
     {% for label in alt_labels %}
       <tr>
-        <td style="border-top:none">UF</td>
-        <td style="border-top:none"><i>{{ label }}</i></td>                
+        <td dir={{direction}} style="border-top:none">UF</td>
+        <td dir={{direction}} style="border-top:none"><i>{{ label }}</i></td>                
       </tr>
     {% endfor %}
   </table>
@@ -132,17 +138,17 @@
     {% set uri_part = elem.uri.split('#') %}
     <tr>
       {% if elem.type == 'broader' %}
-      <td style="border-top: none">BT</td>
+      <td dir={{direction}} style="border-top: none">BT</td>
       {% elif elem.type == 'related' %}
-      <td style="border-top: none">RT</td>
+      <td dir={{direction}} style="border-top: none">RT</td>
       {% elif elem.type == 'narrower' %}
-      <td style="border-top: none">NT</td>
+      <td dir={{direction}} style="border-top: none">NT</td>
       {% elif elem.type == 'member' %}
-      <td style="border-top: none">Member</td>
+      <td dir={{direction}} style="border-top: none">Member</td>
       {% endif %}
 
       {% if lang %}
-      <td style="border-top: none"><a href="/term?lang={{lang}}&base_uri={{uri_part.0}}&uri_anchor={{uri_part.1}}">{{elem.pref_label}}</a></td>
+      <td dir={{direction}} style="border-top: none"><a href="/term?lang={{lang}}&base_uri={{uri_part.0}}&uri_anchor={{uri_part.1}}">{{elem.pref_label}}</a></td>
       {% else %}
       <td style="border-top: none"><a href="/term?lang=en&base_uri={{uri_part.0}}&uri_anchor={{uri_part.1}}">
         {{elem.pref_label}}
