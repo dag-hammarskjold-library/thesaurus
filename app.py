@@ -356,6 +356,7 @@ def term():
 
 @app.route('/search')
 def search():
+    import unicodedata
     query = request.args.get('q', None)
     if not query:
         app.logger.error("Forgot to pass query to search view!")
@@ -365,6 +366,12 @@ def search():
         app.logger.error("No language set in search view!")
         abort(500)
     page = request.args.get('page', '1')
+
+    # first -- sanitize the string
+    def remove_control_characters(s):
+        return "".join(ch for ch in s if unicodedata.category(ch)[0] != "C")
+
+    query = remove_control_characters(query)
 
     match = query_es(query, preferred_language, 50)
     count = len(match)
