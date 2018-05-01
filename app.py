@@ -235,7 +235,7 @@ class Term:
     def rdf_types(self):
         """
         get the rdf types for this term
-        1 or more of concept, MicroThesaurus, etc
+        1 or more of Concept, MicroThesaurus, etc
         """
         rdf_types = []
         for t in graph.objects(subject=URIRef(self.concept), predicate=RDF.type):
@@ -244,7 +244,7 @@ class Term:
 
     def language_labels(self):
         """
-        get and order concept translations
+        get and order concept translations (UN order)
         """
         labels = []
         for lang in ['ar', 'zh', 'en', 'fr', 'ru', 'es']:
@@ -434,6 +434,7 @@ def serialize_data():
     if req_format == 'xml':
         req_format = 'pretty-xml'
 
+    # get the properties of the given concept(term)
     uri = base_uri + '#' + uri_anchor
     node = URIRef(uri)
     term = Term(node)
@@ -448,6 +449,7 @@ def serialize_data():
     title = term.title()
     top_concept = term.top_concept_of()
 
+    # create a new graph
     from rdflib import Graph
     g = Graph()
 
@@ -483,6 +485,7 @@ def serialize_data():
     if top_concept:
         g.add((node, SKOS.topConceptOf, URIRef(top_concept[0][0])))
 
+    # graph.serialize returns binary data
     data = b''
     if req_format != 'json-ld':
         data = g.serialize(format=req_format, encoding='utf-8')
@@ -513,14 +516,65 @@ def serialize_data():
 
 
 def get_preferred_label(resource, language):
-    default_language = app.config.get('LANGUAGE_CODE')
     if not language:
-        language = default_language
+        language = 'en'
     label = graph.preferredLabel(resource, lang=language)
+    # pref labels come back as tupels
     if len(label) > 0:
         return label[0][1]
     else:
         return resource
+
+
+def get_concepts(page, lang='en'):
+    '''
+    @args
+        page: requested page number
+        lang: requested language parameter
+    get all concept uri's and prefLabels
+    sort on prefLabels
+    this method is seperate from index (above)
+    because rdflib-sqlalchemy is basically
+    useless for triple store
+
+    Need *all* prefLabels
+    so that sorting makes sense
+    '''
+    # get all keys back
+    keys = rdb.keys("https*")
+    num_concepts = len(keys)
+
+    # now get pref labels for each uri
+    # for the language specified in @lang
+    results = []
+    for uri in keys:
+        pref_label = get_pref_label_concept(uri, lang)
+        if not pref_label:
+            continue
+        base_uri = ''
+        uri_anchor = ''
+        m = re.search('#', uri)
+        if m:
+            base_uri, uri_anchor = uri.split('#')
+        else:
+            base_uri = uri
+        results.append({
+            'base_uri': base_uri,
+            'uri_anchor': uri_anchor,
+            'pref_label': pref_label})
+
+    # sort by pref label -- note, this works across languages
+    sorted_results = sorted(results, key=lambda tup: tup['pref_label'])
+    pagination = Pagination(page, PER_PAGE, num_concepts)
+    response = sorted_results[
+        (int(page) - 1) * int(PER_PAGE):(int(page) - 1) * int(PER_PAGE) + int(PER_PAGE)]
+
+    return render_template("index.html",
+        context=response,
+        lang=lang,
+        aspect="Concept",
+        page=page,
+        pagination=pagination)
 
 
 def get_pref_label_concept(concept_uri, language='en'):
@@ -535,62 +589,6 @@ def get_pref_label_concept(concept_uri, language='en'):
     vals = rdb.get(concept_uri)
     data = json.loads(vals)
     return data.get(language, None)
-
-
-def get_concepts(page, lang='en'):
-    '''
-    @args
-        page: requested page number
-        lang: requested language parameter
-    get all concept uir's and prefLabels
-    sort on prefLabels
-    this method is seperate from index (above)
-    because rdflib-sqlalchemy is basically
-    useless for triple store
-
-    Need all concepts and prefLabels
-    so that sorting makes sense
-    '''
-    num_concepts = 0
-    q = """select (count(distinct ?subject) as ?count)
-            where { ?subject a <%s> .} """ % str(SKOS.Concept)
-    res = graph.query(q)
-    for r in res:
-        num_concepts = int(r[0])
-
-    q = """ select ?subject
-        where { ?subject a <%s> . }
-        """ % str(SKOS.Concept)
-
-    results = []
-    uris = graph.query(q)
-    for uri in uris:
-        pref_label = get_pref_label_concept(str(uri[0]), lang)
-        if not pref_label:
-            continue
-        base_uri = ''
-        uri_anchor = ''
-        m = re.search('#', uri[0])
-        if m:
-            base_uri, uri_anchor = uri[0].split('#')
-        else:
-            base_uri = uri[0]
-        results.append({
-            'base_uri': base_uri,
-            'uri_anchor': uri_anchor,
-            'pref_label': pref_label})
-
-    sorted_results = sorted(results, key=lambda tup: tup['pref_label'])
-    pagination = Pagination(page, PER_PAGE, num_concepts)
-    response = sorted_results[
-        (int(page) - 1) * int(PER_PAGE):(int(page) - 1) * int(PER_PAGE) + int(PER_PAGE)]
-
-    return render_template("index.html",
-        context=response,
-        lang=lang,
-        aspect="Concept",
-        page=page,
-        pagination=pagination)
 
 
 def query_es(query, lang, max_hits):
