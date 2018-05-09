@@ -27,7 +27,7 @@ if not os.path.exists(args.filename):
 
 
 def setup_postgres():
-    ret = subprocess(['which', 'psql'])
+    ret = subprocess.run(['which', 'psql'])
     if ret.returncode != 0:
         print("Postgres is either not installed or not in your path.  Exiting")
         sys.exit(-1)
@@ -69,6 +69,6 @@ def setup_es():
 
 if __name__ == '__main__':
     setup_postgres()
-    setup_redis()
-    setup_es()
+    #setup_redis()
+    #setup_es()
     print("Congrats!  Postgres database, redis database and Elasticsearch are ready to use")
