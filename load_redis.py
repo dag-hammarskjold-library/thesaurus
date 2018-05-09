@@ -26,11 +26,23 @@ graph.bind('skos', SKOS)
 REDIS_HOST = app.config.get('REDIS_HOST', None)
 REDIS_PORT = app.config.get('REDIS_PORT', None)
 REDIS_DB = app.config.get('REDIS_DB', None)
+REDIS_TIMEOUT = app.config.get('REDIS_TIMEOUT', None)
 try:
-    rdb = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, charset="utf-8", decode_responses=True)
+    rdb = StrictRedis(
+        host=REDIS_HOST,
+        port=REDIS_PORT,
+        db=REDIS_DB,
+        charset="utf-8",
+        decode_responses=True,
+        socket_timeout=REDIS_TIMEOUT,
+        socket_connect_timeout=REDIS_TIMEOUT)
 except RedisError as e:
     print("Could not connect to redis service, exiting")
     sys.exit(1)
+except Exception as e:
+    print("Could not connect to redis service: {}, exiting".format(e))
+    sys.exit(1)
+
 
 # delete everything in this redis database
 try:
