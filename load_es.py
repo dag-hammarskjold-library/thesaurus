@@ -98,11 +98,11 @@ print("creating mapping ...")
 res = es_con.indices.put_mapping(index=index_name, doc_type="doc", body=thesaurus_mapping)
 print("resonse: {}".format(res))
 
-i = 1
+i = 0
 for uri in graph.query(querystring):
     this_uri = uri[0]
     doc = {"uri": this_uri}
-    j = 1
+    j = 0
     for lang in ['ar', 'zh', 'en', 'fr', 'ru', 'es']:
         pref_labels = []
         for label in graph.preferredLabel(URIRef(this_uri), lang):
@@ -119,7 +119,7 @@ for uri in graph.query(querystring):
 
         res = es_con.index(index=index_name, doc_type='doc', body=payload)
         doc = {"uri": this_uri}
-        j = j + 1
+        j += 1
     i += j
     if i % 50 == 0:
-        print("{} documents indexed".format(i))
+        print("{} fields indexed".format(i))
