@@ -27,16 +27,6 @@ if not os.path.exists(args.filename):
 
 
 def setup_postgres():
-    ret = subprocess.run(['which', 'psql'])
-    if ret.returncode != 0:
-        print("Postgres is either not installed or not in your path.  Exiting")
-        sys.exit(-1)
-    try:
-        subprocess.run(['createdb', POSTGRES_DB])
-        subprocess.run(['createuser', POSTGRES_USER])
-    except subprocess.CalledProcessError as ex:
-        print("Caught error creating postgres db and user: {}".format(ex))
-        sys.exit(-1)
     try:
         subprocess.run(['python', 'create_db.py', '-f', args.filename])
     except subprocess.CalledProcessError as ex:
@@ -45,10 +35,6 @@ def setup_postgres():
 
 
 def setup_redis():
-    ret = subprocess.run(['which', 'redis-cli'])
-    if ret.returncode != 0:
-        print("Redis is either not installed or not in your path.  Exiting")
-        sys.exit(-1)
     try:
         subprocess.run(['python', 'load_redis.py'])
     except subprocess.CalledProcessError as ex:
@@ -57,10 +43,6 @@ def setup_redis():
 
 
 def setup_es():
-    ret = subprocess.run(['which', 'elasticsearch'])
-    if ret.returncode != 0:
-        print("Elasticsearch in either not installed or not in your path. Exiting")
-        sys.exit(-1)
     try:
         subprocess.run(['python', 'load_es.py'])
     except subprocess.CalledProcessError as ex:
@@ -69,6 +51,6 @@ def setup_es():
 
 if __name__ == '__main__':
     setup_postgres()
-    # setup_redis()
-    # setup_es()
+    setup_redis()
+    setup_es()
     print("Congrats!  Postgres database, redis database and Elasticsearch are ready to use")
