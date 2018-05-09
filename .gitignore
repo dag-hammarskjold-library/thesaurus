@@ -2,4 +2,4 @@
 /venv
 *.ttl
 *.py[co]
-
+config.py
