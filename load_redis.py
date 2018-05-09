@@ -1,5 +1,7 @@
+import sys
 import json
 from redis import StrictRedis
+from redis.exceptions import RedisError
 from rdflib.store import Store
 from rdflib.namespace import SKOS
 from rdflib_sqlalchemy import registerplugins
@@ -24,10 +26,19 @@ graph.bind('skos', SKOS)
 REDIS_HOST = app.config.get('REDIS_HOST', None)
 REDIS_PORT = app.config.get('REDIS_PORT', None)
 REDIS_DB = app.config.get('REDIS_DB', None)
-rdb = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, charset="utf-8", decode_responses=True)
+try:
+    rdb = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, charset="utf-8", decode_responses=True)
+except RedisError as e:
+    print("Could not connect to redis service, exiting")
+    sys.exit(1)
 
 # delete everything in this redis database
-rdb.flushdb()
+try:
+    rdb.flushdb()
+except RedisError as e:
+    print("Could not delete old db, exiting!")
+    sys.exit(1)
+
 
 # get all SKOS.Concept uri's (except place names)
 query = """
@@ -50,7 +61,10 @@ for r in res:
         if len(label):
             labels[lang] = str(label[0][1])
     data = json.dumps(labels)
-    rdb.set(str(r[0]), data)
+    try:
+        rdb.set(str(r[0]), data)
+    except RedisError as e:
+        print("Loading Cache failed for : {}, {}".format(str(r[0]), e))
     labels = {}
     if i % 50 == 0:
         print("{} documents processed".format(i))
