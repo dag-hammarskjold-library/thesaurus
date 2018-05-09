@@ -35,6 +35,30 @@ thesaurus_index = {
     "settings": {
         "index": {
             "number_of_shards": 3
+        },
+        "analysis": {
+            "analyzer": {
+                "autocomplete": {
+                    "tokenizer": "autocomplete",
+                    "filter": [
+                        "lowercase"
+                    ]
+                },
+                "autocomplete_search": {
+                    "tokenizer": "lowercase"
+                }
+            },
+            "tokenizer": {
+                "autocomplete": {
+                    "type": "edge_ngram",
+                    "min_gram": 3,
+                    "max_gram": 10,
+                    "token_chars": [
+                        "letter",
+                        "digit"
+                    ]
+                }
+            }
         }
     }
 }
@@ -49,36 +73,6 @@ if es_con.indices.exists(index_name):
 # Create Index
 print("creating {} index...".format(index_name))
 res = es_con.indices.create(index=index_name, body=thesaurus_index)
-print(" response: {}".format(res))
-
-analysis = {
-    "analysis": {
-        "analyzer": {
-            "autocomplete": {
-                "tokenizer": "autocomplete",
-                "filter": [
-                    "lowercase"
-                ]
-            },
-            "autocomplete_search": {
-                "tokenizer": "lowercase"
-            }
-        },
-        "tokenizer": {
-            "autocomplete": {
-                "type": "edge_ngram",
-                "min_gram": 3,
-                "max_gram": 10,
-                "token_chars": [
-                    "letter",
-                    "digit"
-                ]
-            }
-        }
-    }
-}
-print("creating analyzer")
-res = es_con.indices.put_settings(body=analysis, index=index_name)
 print(" response: {}".format(res))
 
 
