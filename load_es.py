@@ -78,9 +78,7 @@ analysis = {
     }
 }
 print("creating analyzer")
-es_con.indices.close(index=index_name)
 res = es_con.indices.put_settings(body=analysis, index=index_name)
-es_con.indices.open(index=index_name)
 print(" response: {}".format(res))
 
 
@@ -122,12 +120,6 @@ for uri in graph.query(querystring):
             if label.language == lang:
                 alt_labels.append(label)
         doc.update({"alt_labels_{}".format(lang): alt_labels})
-
-        # scope_notes = []
-        # for sn in graph.objects(URIRef(this_uri), SKOS.scopeNote):
-        #     if sn.language == lang:
-        #         scope_notes.append(sn)
-        # doc.update({"scope_notes_{}".format(lang): scope_notes})
 
         payload = json.dumps(doc)
 

@@ -69,6 +69,6 @@ def setup_es():
 
 if __name__ == '__main__':
     setup_postgres()
-    #setup_redis()
-    #setup_es()
+    # setup_redis()
+    # setup_es()
     print("Congrats!  Postgres database, redis database and Elasticsearch are ready to use")
