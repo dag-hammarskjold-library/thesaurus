@@ -475,7 +475,8 @@ def serialize_data():
     g.bind('eu', EU)
     g.bind('unbist', UNBIST)
 
-    g.add((node, RDF.type, RDF.Description))
+    if req_format == 'rdf/xml':
+        g.add((node, RDF.type, RDF.Description))
     if not isskosconceptscheme:
         g.add((node, RDF.type, SKOS.Concept))
     else:
