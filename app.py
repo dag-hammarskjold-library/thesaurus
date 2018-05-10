@@ -205,7 +205,7 @@ class Term:
         broader and narrower terms
         """
         relationships = []
-        for c in [SKOS.broader, SKOS.related, SKOS.narrower, SKOS.member]:
+        for c in [SKOS.broader, SKOS.related, SKOS.narrower, SKOS.hasTopConcept]:
             this_results = []
             for rel in graph.objects(subject=URIRef(self.concept), predicate=c):
                 rel_label = get_preferred_label(rel, self.lang)
