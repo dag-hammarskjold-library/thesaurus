@@ -268,11 +268,12 @@ def index():
         preferred_language = 'en'
     aspect = request.args.get('aspect', 'MicroThesaurus')
 
+    aspect_uri = ''
     try:
         aspect_uri = ROUTABLES[aspect]
     except KeyError as e:
         app.logger.error("Caught exception : {}".format(e))
-    aspect_uri = ROUTABLES['MicroThesaurus']
+        aspect_uri = ROUTABLES['MicroThesaurus']
 
     # if listing SKOS Concepts
     # use redis store
