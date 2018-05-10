@@ -479,8 +479,8 @@ def serialize_data():
             g.add((node, SKOS.narrower, URIRef(l.get('uri'))))
         elif l.get('type') == 'related':
             g.add((node, SKOS.related, URIRef(l.get('uri'))))
-        elif l.get('type') == 'member':
-            g.add((node, SKOS.member, URIRef(l.get('uri'))))
+        elif l.get('type') == 'hasTopConcept':
+            g.add((node, SKOS.hasTopConcept, URIRef(l.get('uri'))))
 
     # this shows up as ns1.identifier ???
     if(len(identifier)):
