@@ -44,7 +44,8 @@ ROUTABLES = {
     'Concept': SKOS.Concept,
     'ConceptScheme': SKOS.ConceptScheme,
     'Domain': EU.Domain,
-    'MicroThesaurus': EU.MicroThesaurus
+    'MicroThesaurus': EU.MicroThesaurus,
+    'GeorgraphicTerm': UNBIST.GeographicTerm
 }
 
 
@@ -440,7 +441,16 @@ def serialize_data():
         abort(400, {"message": "Unsuported serialization format: {}".format(req_format)})
 
     if req_format == 'xml':
-        req_format = 'pretty-xml'
+        req_format = 'rdf/xml'
+
+    # This is very kludgy!
+    iseuconcept = False
+    if len(uri_anchor) == 6:
+        iseuconcept = True
+    isskosconceptscheme = False
+    if len(uri_anchor) == 2:
+        isskosconceptscheme = True
+        iseuconcept = True
 
     # get the properties of the given concept(term)
     uri = base_uri + '#' + uri_anchor
@@ -458,10 +468,21 @@ def serialize_data():
     top_concept = term.top_concept_of()
 
     # create a new graph
-    from rdflib import Graph
-    g = Graph()
+    # from rdflib import Graph
+    g = ConjunctiveGraph()
+    g.bind('skos', SKOS)
+    g.bind('dcterms', DCTERMS)
+    g.bind('eu', EU)
+    g.bind('unbist', UNBIST)
 
-    g.add((node, RDF.type, SKOS.Concept))
+    g.add((node, RDF.type, RDF.Description))
+    if not isskosconceptscheme:
+        g.add((node, RDF.type, SKOS.Concept))
+    else:
+        g.add((node, RDF.type, SKOS.ConceptScheme))
+    if iseuconcept:
+        g.add((node, RDF.type, EU.concept))
+
     for l in pref_labels:
         g.add((node, SKOS.prefLabel, l[1]))
     for l in alt_labels:
@@ -482,7 +503,6 @@ def serialize_data():
         elif l.get('type') == 'hasTopConcept':
             g.add((node, SKOS.hasTopConcept, URIRef(l.get('uri'))))
 
-    # this shows up as ns1.identifier ???
     if(len(identifier)):
         g.add((node, DCTERMS.identifier, identifier[0][0]))
         g.add((node, DCTERMS.identifier, URIRef(identifier[1][0])))
