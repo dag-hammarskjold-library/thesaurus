@@ -1,6 +1,5 @@
 import io
 import json
-from redis import StrictRedis
 import re
 from math import ceil
 from rdflib import plugin, ConjunctiveGraph, Literal, Namespace, URIRef, RDF
@@ -11,6 +10,7 @@ from flask import Flask
 from flask import render_template, abort, request, Response, send_file
 from config import DevelopmentConfig
 from elasticsearch import Elasticsearch
+from redis import StrictRedis
 
 registerplugins()
 
@@ -437,11 +437,11 @@ def serialize_data():
     req_format = request.form.get('format')
     target = request.form.get('dl_location')
     req_format = req_format.lower()
-    if req_format.lower() not in ['xml', 'n3', 'turtle', 'nt', 'pretty-xml', 'json-ld']:
+    if req_format.lower() not in ['xml', 'n3', 'turtle', 'nt', 'json-ld']:
         abort(400, {"message": "Unsuported serialization format: {}".format(req_format)})
 
-    if req_format == 'xml':
-        req_format = 'rdf/xml'
+    if req_format.lower() == 'xml':
+        req_format = 'xml'
 
     # This is very kludgy!
     iseuconcept = False
@@ -475,14 +475,14 @@ def serialize_data():
     g.bind('eu', EU)
     g.bind('unbist', UNBIST)
 
-    if req_format == 'rdf/xml':
+    if req_format == 'xml':
         g.add((node, RDF.type, RDF.Description))
     if not isskosconceptscheme:
         g.add((node, RDF.type, SKOS.Concept))
     else:
         g.add((node, RDF.type, SKOS.ConceptScheme))
     if iseuconcept:
-        g.add((node, RDF.type, EU.concept))
+        g.add((node, RDF.type, EU.Domain))
 
     for l in pref_labels:
         g.add((node, SKOS.prefLabel, l[1]))
@@ -524,7 +524,7 @@ def serialize_data():
     file_ext = ''
     if req_format == 'turtle':
         file_ext = 'ttl'
-    elif req_format == 'pretty-xml':
+    elif req_format == 'xml':
         file_ext = 'xml'
     elif req_format == 'json-ld':
         file_ext = 'json'
