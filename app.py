@@ -10,7 +10,6 @@ from flask import Flask
 from flask import render_template, abort, request, Response, send_file
 from config import DevelopmentConfig
 from elasticsearch import Elasticsearch
-from redis import StrictRedis
 
 registerplugins()
 
@@ -25,12 +24,7 @@ graph = ConjunctiveGraph(store)
 graph.open(db_uri, create=False)
 graph.bind('skos', SKOS)
 
-# setup redis connection
 PER_PAGE = app.config.get("PER_PAGE", 20)
-REDIS_HOST = app.config.get('REDIS_HOST', None)
-REDIS_PORT = app.config.get('REDIS_PORT', None)
-REDIS_DB = app.config.get('REDIS_DB', None)
-rdb = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, charset="utf-8", decode_responses=True)
 
 # setup Elasticsearch connection
 elasticsearch_uri = app.config.get('ELASTICSEARCH_URI', None)
@@ -275,11 +269,6 @@ def index():
     except KeyError as e:
         app.logger.error("Caught exception : {}".format(e))
         aspect_uri = ROUTABLES['MicroThesaurus']
-
-    # if listing SKOS Concepts
-    # use redis store
-    if aspect == 'Concept':
-        return get_concepts(page, preferred_language)
 
     results = []
     count_q = """select (count(distinct ?subject) as ?count)
@@ -553,71 +542,6 @@ def get_preferred_label(resource, language):
         return label[0][1]
     else:
         return resource
-
-
-def get_concepts(page, lang='en'):
-    '''
-    @args
-        page: requested page number
-        lang: requested language parameter
-    get all concept uri's and prefLabels
-    sort on prefLabels
-    this method is seperate from index (above)
-    because rdflib-sqlalchemy is basically
-    useless for triple store
-
-    Need *all* prefLabels
-    so that sorting makes sense
-    '''
-    # get all keys back
-    keys = rdb.keys("https*")
-    num_concepts = len(keys)
-
-    # now get pref labels for each uri
-    # for the language specified in @lang
-    results = []
-    for uri in keys:
-        pref_label = get_pref_label_concept(uri, lang)
-        if not pref_label:
-            continue
-        base_uri = ''
-        uri_anchor = ''
-        m = re.search('#', uri)
-        if m:
-            base_uri, uri_anchor = uri.split('#')
-        else:
-            base_uri = uri
-        results.append({
-            'base_uri': base_uri,
-            'uri_anchor': uri_anchor,
-            'pref_label': pref_label})
-
-    # sort by pref label -- note, this works across languages
-    sorted_results = sorted(results, key=lambda tup: tup['pref_label'])
-    pagination = Pagination(page, PER_PAGE, num_concepts)
-    response = sorted_results[
-        (int(page) - 1) * int(PER_PAGE):(int(page) - 1) * int(PER_PAGE) + int(PER_PAGE)]
-
-    return render_template("index.html",
-        context=response,
-        lang=lang,
-        aspect="Concept",
-        page=page,
-        pagination=pagination)
-
-
-def get_pref_label_concept(concept_uri, language='en'):
-    '''
-    get prefLabel for a concept
-    @args:
-    :concept_uri: uri of concept -- this will only work
-        for SKOS.Concept items
-    :language: one of ar, zh, en, fr, ru, es
-    get prefLabel from redis store
-    '''
-    vals = rdb.get(concept_uri)
-    data = json.loads(vals)
-    return data.get(language, None)
 
 
 def query_es(query, lang, max_hits):

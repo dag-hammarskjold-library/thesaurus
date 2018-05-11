@@ -34,14 +34,6 @@ def setup_postgres():
         sys.exit(-1)
 
 
-def setup_redis():
-    try:
-        subprocess.run(['python', 'load_redis.py'])
-    except subprocess.CalledProcessError as ex:
-        print("Failed loading concepts into redis: {}".format(ex))
-        sys.exit(-1)
-
-
 def setup_es():
     try:
         subprocess.run(['python', 'load_es.py'])
@@ -51,6 +43,5 @@ def setup_es():
 
 if __name__ == '__main__':
     setup_postgres()
-    setup_redis()
     setup_es()
     print("Congrats!  Postgres database, redis database and Elasticsearch are ready to use")
