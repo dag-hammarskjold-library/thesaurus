@@ -4,12 +4,12 @@
 {% macro render_pagination(pagination) %}
   <div class=pagination>
     {% if pagination.has_prev %}
-      <a href="/search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int - 1}}">&laquo; Prev</a>
+      <a href="./search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int - 1}}">&laquo; Prev</a>
     {% endif %}
   {%- for page in pagination.iter_pages() %}
     {% if page %}
       {% if page != pagination.page %}
-        <a href="/search?lang={{lang}}&page={{page}}&q={{request.args.get('q')}}">{{ page }}</a>
+        <a href="./search?lang={{lang}}&page={{page}}&q={{request.args.get('q')}}">{{ page }}</a>
       {% else %}
         <strong>{{ page }}</strong>
       {% endif %}
@@ -18,7 +18,7 @@
     {% endif %}
   {%- endfor %}
   {% if pagination.has_next %}
-    <a href="/search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int + 1}}">Next &raquo;</a>
+    <a href="./search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int + 1}}">Next &raquo;</a>
   {% endif %}
   </div>
 {% endmacro %}
@@ -34,7 +34,7 @@
         <h2>Search results: {{query}} </h2>
             {% for res in results %}
                 {% set uri_parts = res.uri.split('#') %}
-                <a href="/term?lang={{lang}}&base_uri={{uri_parts.0}}&uri_anchor={{uri_parts.1}}">{{ res.pref_label }}</a>
+                <a href="./term?lang={{lang}}&base_uri={{uri_parts.0}}&uri_anchor={{uri_parts.1}}">{{ res.pref_label }}</a>
                 <br/>
             {% endfor %}
         </div>
@@ -44,12 +44,12 @@
 {% macro render_pagination(pagination) %}
   <div class=pagination>
     {% if pagination.has_prev %}
-      <a href="/search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int - 1}}">&laquo; Prev</a>
+      <a href="./search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int - 1}}">&laquo; Prev</a>
     {% endif %}
   {%- for page in pagination.iter_pages() %}
     {% if page %}
       {% if page != pagination.page %}
-        <a href="/search?lang={{lang}}&page={{page}}&q={{request.args.get('q')}}">{{ page }}</a>
+        <a href="./search?lang={{lang}}&page={{page}}&q={{request.args.get('q')}}">{{ page }}</a>
       {% else %}
         <strong>{{ page }}</strong>
       {% endif %}
@@ -58,7 +58,7 @@
     {% endif %}
   {%- endfor %}
   {% if pagination.has_next %}
-    <a href="/search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int + 1}}">Next &raquo;</a>
+    <a href="./search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int + 1}}">Next &raquo;</a>
   {% endif %}
   </div>
 {% endmacro %}

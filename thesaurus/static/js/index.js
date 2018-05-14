@@ -52,7 +52,7 @@ $( document ).ready(function(){
         delay:500,
         source: function( request, response ){
             xhr = $.ajax({
-                url: "/autocomplete?lang=" + lang + "&q=" + request.term,
+                url: "autocomplete?lang=" + lang + "&q=" + request.term,
                 dataType: "json",
                 cache: false,
                 success: function(data) {
@@ -69,7 +69,7 @@ $( document ).ready(function(){
         }, select: function(event, ui) {
             lang = get_param('lang');
             console.log(ui);
-            window.location = "/term?lang=" + lang + "&base_uri=" + ui.item.base_uri + "&uri_anchor=" + ui.item.uri_anchor;
+            window.location = "term?lang=" + lang + "&base_uri=" + ui.item.base_uri + "&uri_anchor=" + ui.item.uri_anchor;
         }
     });
 
