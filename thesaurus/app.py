@@ -8,7 +8,7 @@ from rdflib.namespace import SKOS
 from rdflib_sqlalchemy import registerplugins
 from flask import Flask
 from flask import render_template, abort, request, Response, send_file
-from config import DevelopmentConfig
+from .config import DevelopmentConfig
 from elasticsearch import Elasticsearch
 
 registerplugins()
