@@ -261,7 +261,7 @@ def index():
     preferred_language = request.args.get('lang')
     if not preferred_language:
         preferred_language = 'en'
-    aspect = request.args.get('aspect', 'MicroThesaurus')
+    aspect = request.args.get('aspect', 'Domain')
 
     aspect_uri = ''
     try:

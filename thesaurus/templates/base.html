@@ -62,9 +62,9 @@
         </button>
         <!-- translate this and also make it change based on the app that's chosen -->
         {% if lang %}
-        <a class="navbar-brand" href="./?lang={{lang}}&aspect=MicroThesaurus">UNBIS Thesaurus</a>
+        <a class="navbar-brand" href="./?lang={{lang}}">UNBIS Thesaurus</a>
         {% else %}
-        <a class="navbar-brand" href="./?lang=en&aspect=MicroThesaurus">UNBIS Thesaurus</a>
+        <a class="navbar-brand" href="./?lang=en">UNBIS Thesaurus</a>
         {% endif %}
         <div class="navbar-header col-lg-4 col-lg-offset-2 col-xs-2 col-xs-offset-2">
           <img src="static/img/dhl.png" style="width:60px;height:60px;">
@@ -87,23 +87,25 @@
         <ul class="nav nav-tabs">
             {% if lang %}
             <li>
-              <input type="button" class="btn btn-default" onclick="location.href = './?aspect=MicroThesaurus&lang={{lang}}'"
-            value="Browse Categories"> &nbsp;
+              <input type="button" class="btn btn-default" onclick="location.href='./?aspect=Domain&lang={{lang}}'" value="Browse Domains"> &nbsp;
             </li>
             {% else %}
             <li>
-              <input type="button" class="btn btn-default" onclick="location.href = './?aspect=MicroThesaurus&lang=en'" value="Browse Categories"> &nbsp; 
+              <input type="button" class="btn btn-default" onclick="location.href='./?aspect=Domain&lang=en'" value="Browse Domains"> &nbsp;
             </li>
             {% endif %}
+
             {% if lang %}
             <li>
-              <input type="button" class="btn btn-default" onclick="location.href='./?aspect=Domain&lang={{lang}}'" value="Browse Domain"> &nbsp;
+              <input type="button" class="btn btn-default" onclick="location.href = './?aspect=MicroThesaurus&lang={{lang}}'"
+            value="Browse MicroThesauri"> &nbsp;
             </li>
             {% else %}
             <li>
-              <input type="button" class="btn btn-default" onclick="location.href='./?aspect=Domain&lang=en'" value="Browse Domain"> &nbsp;
+              <input type="button" class="btn btn-default" onclick="location.href = './?aspect=MicroThesaurus&lang=en'" value="Browse MicroThesauri"> &nbsp;
             </li>
             {% endif %}
+
 
             <!-- <li role="presentation"><a href="#">Request a Copy</a></li>
             <li role="presentation"><a href="#">About</a></li> -->
