@@ -1,3 +1,8 @@
+LANGUAGES = {
+    'en': 'English',
+}
+
+
 class Config:
     DEBUG = False
     TESTING = False

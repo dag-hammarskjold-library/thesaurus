@@ -10,11 +10,14 @@ from flask import Flask
 from flask import render_template, abort, request, Response, send_file
 from .config import DevelopmentConfig
 from elasticsearch import Elasticsearch
+from flask_babel import Babel
+from .config import LANGUAGES
 
 registerplugins()
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
+babel = Babel(app)
 
 # setup graph object
 identifier = URIRef(app.config.get('IDENTIFIER', None))
@@ -251,6 +254,11 @@ class Term:
 def custom400(error):
     response = 'ERROR: ' + error.description['message']
     return response
+
+
+@babel.localeselector
+def get_locale():
+    return request.accept_languages.best_match(LANGUAGES.keys())
 
 
 @app.route('/')
