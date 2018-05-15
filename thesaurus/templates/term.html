@@ -33,9 +33,17 @@
     <h2>{{ pref_label.value }}
       {% for t in rdf_types %}
         {% if lang %}
-        <a href="./?lang={{lang}}&aspect={{ t.short_name }}"><span class="badge">{{ t.short_name }}</span></a>
+          {% if t.short_name == 'Concept' %}
+            <span class="badge">{{ t.short_name }}</span>
+          {% else %}
+            <a href="./?lang={{lang}}&aspect={{ t.short_name }}"><span class="badge">{{ t.short_name }}</span></a>
+          {% endif %}
         {% else %}
-        <a href="./?lang=en&aspect={{ t.short_name }}"><span class="badge">{{ t.short_name }}</span></a>
+          {% if t.short_name == 'Concept' %}
+            <span class="badge">{{ t.short_name }}</span>
+          {% else %}
+            <a href="./?lang=en&aspect={{ t.short_name }}"><span class="badge">{{ t.short_name }}</span></a>
+          {% endif %}
         {% endif %}
       {% endfor %}
       <span class="download pull-right">
