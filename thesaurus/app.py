@@ -15,7 +15,7 @@ from .config import LANGUAGES
 
 registerplugins()
 
-app = Flask(__name__)
+application = app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
 babel = Babel(app)
 

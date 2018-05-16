@@ -4,3 +4,4 @@
 *.py[co]
 config.py
 zappa_settings.json
+*.sock
