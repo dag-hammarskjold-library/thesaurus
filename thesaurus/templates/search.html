@@ -4,7 +4,7 @@
 {% macro render_pagination(pagination) %}
   <div class="pagination">
     {% if pagination.has_prev %}
-      <a href="./search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int - 1}}">&laquo; Prev</a>
+      <a href="./search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int - 1}}">&laquo; {{_('Prev')}}</a>
     {% endif %}
   {%- for page in pagination.iter_pages() %}
     {% if page %}
@@ -18,7 +18,7 @@
     {% endif %}
   {%- endfor %}
   {% if pagination.has_next %}
-    <a href="./search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int + 1}}">Next &raquo;</a>
+    <a href="./search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int + 1}}">{{_('Next')}} &raquo;</a>
   {% endif %}
   </div>
 {% endmacro %}
@@ -50,7 +50,7 @@
 {% macro render_pagination(pagination) %}
   <div class="pagination">
     {% if pagination.has_prev %}
-      <a href="./search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int - 1}}">&laquo; Prev</a>
+      <a href="./search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int - 1}}">&laquo; {{_('Prev')}}</a>
     {% endif %}
   {%- for page in pagination.iter_pages() %}
     {% if page %}
@@ -64,7 +64,7 @@
     {% endif %}
   {%- endfor %}
   {% if pagination.has_next %}
-    <a href="./search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int + 1}}">Next &raquo;</a>
+    <a href="./search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int + 1}}">{{_('Next')}} &raquo;</a>
   {% endif %}
   </div>
 {% endmacro %}
