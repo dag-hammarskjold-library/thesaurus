@@ -104,6 +104,7 @@
     {% else %}
       {% set direction = "ltr" -%}
     {% endif %}
+    {% if breadcrumbs|length > 0 %}
     <ol class="breadcrumb">
       {% for b in breadcrumbs %}
       {% set uri_parts = b.domain.uri.split('#') %}
@@ -116,6 +117,7 @@
       {% endif %}
       {% endfor %}
     </ol>
+    {% endif %}
     
   </div>
 </div>
