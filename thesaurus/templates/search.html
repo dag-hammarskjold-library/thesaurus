@@ -2,7 +2,7 @@
 {% block content %}
 
 {% macro render_pagination(pagination) %}
-  <div class=pagination>
+  <div class="pagination">
     {% if pagination.has_prev %}
       <a href="./search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int - 1}}">&laquo; Prev</a>
     {% endif %}
@@ -24,7 +24,13 @@
 {% endmacro %}
 
 {% if pagination.pages > 1 %}
-  <p class="pagination"> {{ render_pagination(pagination) }} </p>
+  <!--
+  <p class="pagination"> 
+  -->
+  {{ render_pagination(pagination) }} 
+  <!--
+  </p>
+  -->
 {% endif %}
 
 <div class="container">
@@ -42,7 +48,7 @@
 </div>
 
 {% macro render_pagination(pagination) %}
-  <div class=pagination>
+  <div class="pagination">
     {% if pagination.has_prev %}
       <a href="./search?lang={{lang}}&q={{request.args.get('q')}}&page={{pagination.page|int - 1}}">&laquo; Prev</a>
     {% endif %}
@@ -64,7 +70,13 @@
 {% endmacro %}
 
 {% if pagination.pages > 1 %}
-  <p class="pagination"> {{ render_pagination(pagination) }} </p>
+  <!--
+  <p class="pagination"> 
+  -->
+  {{ render_pagination(pagination) }} 
+  <!--
+  </p>
+  -->
 {% endif %}
 
 {% endblock %}
