@@ -19,7 +19,7 @@
     {% endif %}
   {%- endfor %}
   {% if pagination.has_next %}
-    <a href="./term?lang={{lang}}&base_uri={{request.args.get('base_uri')}}&uri_anchor={{request.args.get('uri_anchor')}}&page={{pagination.page|int + 1}}">Next &raquo;</a>
+    <a href="./term?lang={{lang}}&base_uri={{request.args.get('base_uri')}}&uri_anchor={{request.args.get('uri_anchor')}}&page={{pagination.page|int + 1}}">{{ _('Next') }} &raquo;</a>
   {% endif %}
   </div>
 {% endmacro %}
@@ -71,13 +71,13 @@
                 <h5 class="form-ribbon-heading"></h5>
               </div>
               <form method="POST" action="./api" id="post-api" enctype="multipart/form-data">
-                <label>Node</label>
+                <label>{{ _('Node') }}</label>
                 <input type="text" size='64' name="uri" value="{{request.args.get('base_uri') + '#' + request.args.get('uri_anchor')}}" disabled>
                 <input type="hidden" name="uri_anchor" value={{request.args.get('uri_anchor')}}>
                 <input type="hidden" name="base_uri" value="{{request.args.get('base_uri')}}">
                   <br>
                   <hr>
-                <label>Format</label>
+                <label>{{ _('Format') }}</label>
                 <select name="format" form="post-api">
                   <option selected="selected" value="turtle">Turtle</option>
                   <option value="xml">XML</option>
@@ -87,13 +87,13 @@
                 </select>
                 <hr>
                 <br>
-                <label>Download or Print to Screen?</label>
+                <label>{{ _('Download or Print to Screen?') }}</label>
                 <br>
-                <input type="radio" name="dl_location" value="on_screen" checked> Show on Screen
+                <input type="radio" name="dl_location" value="on_screen" checked> {{ _('Show on Screen') }}
                 <br>
-                <input type="radio" name="dl_location" value="download"> As download
+                <input type="radio" name="dl_location" value="download"> {{ _('As download') }}
                 <hr>
-                <button type="submit" class="btn btn-success center-block">Submit</button>
+                <button type="submit" class="btn btn-success center-block">{{ _('Submit') }}</button>
               </form>
           </div>
         </div>
@@ -144,10 +144,6 @@
   </table>
 {% endif %}
 
-<!-- <p> Preferred Label :
-  {{ pref_label }}
-</p>
- -->
 <div class="col-md-6">
   <table class="table table-condensed">
     {% for elem in relationships %}
@@ -189,7 +185,7 @@
 <div class="col-md-6">
   <table class="table table-condensed">
   <tr>
-    <th colspan="2" style="border-top:none">Language Equivalents</th></tr>
+    <th colspan="2" style="border-top:none">{{_('Language Equivalents')}}</th></tr>
     {% for elem in pref_labels %}
       {% for label in elem %}
       <tr>
