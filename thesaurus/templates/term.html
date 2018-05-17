@@ -25,7 +25,13 @@
 {% endmacro %}
 
 {% if pagination.pages > 1 %}
-  <p class="pagination"> {{ render_pagination(pagination) }} </p>
+  <!--
+  <p class="pagination"> 
+  -->
+  {{ render_pagination(pagination) }} 
+  <!--
+  </p>
+  -->
 {% endif %}
 
 <div class="row">
@@ -167,7 +173,13 @@
   </table>
 
   {% if pagination.pages > 1 %}
-  <p class="pagination"> {{ render_pagination(pagination) }} </p>
+  <!--
+  <p class="pagination"> 
+  -->
+  {{ render_pagination(pagination) }}
+  <!-- 
+  </p>
+  -->
   {% endif %}
 </div>
 
