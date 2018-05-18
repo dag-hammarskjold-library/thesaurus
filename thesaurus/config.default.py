@@ -1,8 +1,3 @@
-LANGUAGES = {
-    'en': 'English',
-}
-
-
 class Config:
     DEBUG = False
     TESTING = False
@@ -21,6 +16,9 @@ class Config:
     PER_PAGE = 25
     ELASTICSEARCH_URI = "http://127.0.0.1:9200/"
     INDEX_NAME = 'thesaurus'
+    LANGUAGES = {
+        'en': 'English',
+    }
 
 
 class ProductionConfig(Config):

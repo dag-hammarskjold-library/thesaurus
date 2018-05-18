@@ -11,12 +11,12 @@ from flask import render_template, abort, request, Response, send_file
 from .config import DevelopmentConfig
 from elasticsearch import Elasticsearch
 from flask_babel import Babel
-from .config import LANGUAGES
 
 registerplugins()
 
 application = app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
+LANGUAGES = app.config.get('LANGUAGES', None)
 babel = Babel(app)
 
 # setup graph object
@@ -37,12 +37,13 @@ es = Elasticsearch(elasticsearch_uri)
 EU = Namespace('http://eurovoc.europa.eu/schema#')
 DCTERMS = Namespace("http://purl.org/dc/terms#")
 UNBIST = Namespace('http://unontologies.s3-website-us-east-1.amazonaws.com/unbist#')
+UNVOC = Namespace('https://metadata.un.org/schema/')
 ROUTABLES = {
     'Concept': SKOS.Concept,
     'ConceptScheme': SKOS.ConceptScheme,
     'Domain': EU.Domain,
     'MicroThesaurus': EU.MicroThesaurus,
-    'GeorgraphicTerm': UNBIST.GeographicTerm
+    'GeorgraphicTerm': UNVOC.GeographicTerm
 }
 
 
