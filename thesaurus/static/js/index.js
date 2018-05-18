@@ -11,7 +11,7 @@ $( document ).ready(function(){
      and set lang parmeter
      default to en 
     */
-    var lang = get_param('lang');
+    var lang = getParameterByName('lang');
     if ( ! lang ){
         var pref_lang = get_browser_language();
         switch(pref_lang){
@@ -46,7 +46,7 @@ $( document ).ready(function(){
      to select area under form
     */
     var xhr;
-    var lang = get_param('lang');
+    var lang = getParameterByName('lang');
     xhr = $('#autocomplete').autocomplete({
         minLength:2,   
         delay:500,
@@ -67,7 +67,7 @@ $( document ).ready(function(){
                 }
             });
         }, select: function(event, ui) {
-            lang = get_param('lang');
+            lang = getParameterByName('lang');
             console.log(ui);
             window.location = "term?lang=" + lang + "&base_uri=" + ui.item.base_uri + "&uri_anchor=" + ui.item.uri_anchor;
         }
@@ -79,7 +79,7 @@ $( document ).ready(function(){
     $(".lang").on("click", function(e){
         e.preventDefault();
         var currentURL = window.location.href;
-        var lang = get_param('lang');
+        var lang = getParameterByName('lang');
         var prefLang = this.id;
         console.log(prefLang);
         var searchParams = new URLSearchParams(window.location.search);
@@ -94,11 +94,14 @@ $( document ).ready(function(){
 
 });
 
-function get_param(param){
-    var url_string = window.location.href;
-    var url = new URL(url_string);
-    var myParam = url.searchParams.get(param);
-    return myParam;
+function getParameterByName(name) {
+    var url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
 function get_browser_language(){
