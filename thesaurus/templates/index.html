@@ -2,8 +2,14 @@
 
 {% block content %}
 
+{% if lang == 'ar' %}
+  {% set direction = "rtl" -%}
+{% else %}
+  {% set direction = "ltr" -%}
+{% endif %}
+
 {% macro render_pagination(pagination) %}
-  <div class=pagination>
+  <div class="pagination">
     {% if pagination.has_prev %}
       <a href="./?lang={{lang}}&aspect={{aspect}}&page={{pagination.page|int - 1}}">&laquo; {{ _('Prev') }}</a>
     {% endif %}
@@ -15,7 +21,7 @@
         <strong>{{ page }}</strong>
       {% endif %}
     {% else %}
-      <span class=ellipsis>…</span>
+      <span class="ellipsis">…</span>
     {% endif %}
   {%- endfor %}
   {% if pagination.has_next %}
@@ -25,13 +31,7 @@
 {% endmacro %}
 
 {% if pagination.pages > 1 %}
-  <!--
-  <p class="pagination"> 
-  -->
   {{ render_pagination(pagination) }} 
-  <!--
-  </p>
-  -->
 {% endif %}
 
 <table class="table table-hover">
@@ -39,15 +39,15 @@
     {% for term in context %}
     <tr>
         {% if lang %}
-        <td>
-            <a href="./term?lang={{lang}}&base_uri={{ term.base_uri }}&uri_anchor={{ term.uri_anchor }}">
-            {{ term.pref_label }}
-        </a></td>
+            <td dir={{direction}}>
+                <a href="./term?lang={{lang}}&base_uri={{ term.base_uri }}&uri_anchor={{ term.uri_anchor }}">
+                  {{ term.pref_label }}
+                </a></td>
         {% else %}
-        <td>
-            <a href="./term?lang=en&base_uri={{ term.base_uri }}&uri_anchor={{ term.uri_anchor }}">
-            {{ term.pref_label }}
-        </a></td>
+            <td dir={{direction}}>
+                <a href="./term?lang=en&base_uri={{ term.base_uri }}&uri_anchor={{ term.uri_anchor }}">
+                  {{ term.pref_label }}
+                </a></td>
         {% endif %}
     </tr>
     {% endfor %}
@@ -55,7 +55,7 @@
 </table>
 
 {% macro render_pagination(pagination) %}
-  <div class=pagination>
+  <div class="pagination">
     {% if pagination.has_prev %}
       <a href="./?lang={{lang}}&aspect={{aspect}}&page={{pagination.page|int - 1}}">&laquo; {{ _('Prev') }}</a>
     {% endif %}
