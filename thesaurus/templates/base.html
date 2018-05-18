@@ -12,7 +12,7 @@
      <link rel="shortcut icon" href="static/img/favicon.png" filename="favicon.png">
  
      <!-- Bootstrap core CSS -->
-     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" type="text/css">
 
      <!-- popper.js -->
      <link href="static/js/popper.js" type="application/javascript" rel="stylesheet">
@@ -21,7 +21,7 @@
      <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 
      <!-- Local Custom styles for this template -->
-     <link href="static/css/style.css" rel="stylesheet">
+     <link href="static/css/style.css" rel="stylesheet" type="text/css">
      <!-- Hosted Style -->
      <!-- <link rel="stylesheet" type="text/css" href="https://s3.amazonaws.com/zappa-j2ith0vcq/style.css"> -->
  
@@ -38,17 +38,14 @@
         crossorigin="anonymous"></script>
 
     <!-- Bootstrap JS -->
-    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"> </script>
+    <script type="application/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"> </script>
 
-    <script type=text/javascript>
+    <script type=application/javascript>
         $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
     </script>
 
     <!-- local index.js -->
-    <script type="text/javascript" src="static/js/index.js"> </script>
-
-    <!-- hosted index.js -->
-    <!-- <script type="text/javascript" src="https://s3.amazonaws.com/zappa-j2ith0vcq/index.js"></script> -->
+    <script type="application/javascript" src="static/js/index.js"> </script>
  
  </head>
 <body>
