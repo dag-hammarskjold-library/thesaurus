@@ -571,3 +571,10 @@ def query_es(query, lang, max_hits):
      }""" % (query, lang, lang)
     match = es.search(index='thesaurus', body=dsl_q, size=max_hits)
     return match
+
+
+# Additional contextual routes. Add a new one for each context you want to route.
+# See the contents of templates/thesaurus.html for an example of how to resolve the routing.
+@app.route('/thesaurus')
+def thesuarus_fragment():
+    return render_template('thesaurus.html')

@@ -1,0 +1,31 @@
+<!-- jQuery -->
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.js"
+      integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+      crossorigin="anonymous"></script>
+
+<script language="javascript">
+  var protocol = window.location.protocol;
+  var host = window.location.host;
+  // This is potentially dangerous, so we want to make sure and strictly sanitize it
+  var resource_id = window.location.hash.slice(1);
+
+  // Temporary measure until all of the URL pieces are in place
+  if (host == 'localhost:5000') {
+    host = 'metadata.un.org';
+  }
+
+  // Temporary measure until we get our certificate in place
+  if (protocol == 'http:') {
+    protocol = 'https:';
+  }
+
+  // We only want to perform the redirect if the host and resource_id are within our defined parameters
+  if ((/^metadata\.un\.org/).test(host) && (/^\d+$/).test(resource_id)) {
+    var lookup_uri = protocol + '//' + host + '/thesaurus';
+    window.location = '/term?base_uri=' + lookup_uri + '&uri_anchor=' + resource_id;
+  } else {
+    window.location = '/';
+  }
+</script>
+
