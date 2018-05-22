@@ -15,11 +15,6 @@
     host = 'metadata.un.org';
   }
 
-  // Temporary measure until we get our certificate in place
-  if (protocol == 'http:') {
-    protocol = 'https:';
-  }
-
   // We only want to perform the redirect if the host and resource_id are within our defined parameters
   if ((/^metadata\.un\.org/).test(host) && (/^\d+$/).test(resource_id)) {
     var lookup_uri = protocol + '//' + host + '/thesaurus';
