@@ -2,7 +2,7 @@ import io
 import json
 import re
 from math import ceil
-from rdflib import plugin, ConjunctiveGraph, Literal, Namespace, URIRef, RDF
+from rdflib import plugin, ConjunctiveGraph, Graph, Literal, Namespace, URIRef, RDF
 from rdflib.store import Store
 from rdflib.namespace import SKOS
 from rdflib_sqlalchemy import registerplugins
@@ -14,7 +14,7 @@ from flask_babel import Babel
 
 registerplugins()
 
-application = app = Flask(__name__)
+app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
 LANGUAGES = app.config.get('LANGUAGES', None)
 babel = Babel(app)
@@ -435,7 +435,8 @@ def serialize_data():
     req_format = request.form.get('format')
     target = request.form.get('dl_location')
     req_format = req_format.lower()
-    if req_format.lower() not in ['xml', 'n3', 'turtle', 'nt', 'json-ld']:
+    print(req_format)
+    if req_format.lower() not in ['xml', 'n3', 'turtle', 'json-ld']:
         abort(400, {"message": "Unsuported serialization format: {}".format(req_format)})
 
     if req_format.lower() == 'xml':
@@ -467,7 +468,7 @@ def serialize_data():
 
     # create a new graph
     # from rdflib import Graph
-    g = ConjunctiveGraph()
+    g = Graph()
     g.bind('skos', SKOS)
     g.bind('dcterms', DCTERMS)
     g.bind('eu', EU)
