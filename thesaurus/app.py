@@ -522,6 +522,7 @@ def serialize_data():
     file_ext = ''
     if req_format == 'turtle':
         file_ext = 'ttl'
+
     elif req_format == 'xml':
         file_ext = 'xml'
     elif req_format == 'json-ld':
@@ -529,17 +530,21 @@ def serialize_data():
     else:
         file_ext = req_format
 
-    as_attachment = None
     if target == "download":
-        as_attachment = True
+        return send_file(
+            io.BytesIO(data),
+            attachment_filename='{}.{}'.format(uri_anchor, file_ext),
+            as_attachment=True
+        )
     else:
-        as_attachment = False
-
-    return send_file(
-        io.BytesIO(data),
-        attachment_filename='{}.{}'.format(uri_anchor, file_ext),
-        as_attachment=as_attachment
-    )
+        if req_format == 'turtle':
+            return Response(data, mimetype='text/turtle')
+        elif req_format == 'xml':
+            return Response(data, mimetype='text/xml')
+        elif req_format == 'n3':
+            return Response(data, mimetype='text/n3')
+        elif req_format == 'json-ld':
+            return Response(data, mimetype='application/ld+json')
 
 
 def get_preferred_label(resource, language):
