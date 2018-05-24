@@ -14,24 +14,24 @@ from flask_babel import Babel
 
 registerplugins()
 
-app = Flask(__name__)
-app.config.from_object(DevelopmentConfig)
-LANGUAGES = app.config.get('LANGUAGES', None)
-babel = Babel(app)
+application = Flask(__name__)
+application.config.from_object(DevelopmentConfig)
+LANGUAGES = application.config.get('LANGUAGES', None)
+babel = Babel(application)
 
 # setup graph object
-identifier = URIRef(app.config.get('IDENTIFIER', None))
-db_uri = Literal(app.config.get('DB_URI'))
+identifier = URIRef(application.config.get('IDENTIFIER', None))
+db_uri = Literal(application.config.get('DB_URI'))
 store = plugin.get("SQLAlchemy", Store)(identifier=identifier, configuration=db_uri)
 graph = ConjunctiveGraph(store)
 graph.open(db_uri, create=False)
 graph.bind('skos', SKOS)
 
-PER_PAGE = app.config.get("PER_PAGE", 20)
+PER_PAGE = application.config.get("PER_PAGE", 20)
 
 # setup Elasticsearch connection
-elasticsearch_uri = app.config.get('ELASTICSEARCH_URI', None)
-index_name = app.config.get('INDEX_NAME', None)
+elasticsearch_uri = application.config.get('ELASTICSEARCH_URI', None)
+index_name = application.config.get('INDEX_NAME', None)
 es = Elasticsearch(elasticsearch_uri)
 
 EU = Namespace('http://eurovoc.europa.eu/schema#')
@@ -251,7 +251,7 @@ class Term:
         return labels
 
 
-@app.errorhandler(400)
+@application.errorhandler(400)
 def custom400(error):
     response = 'ERROR: ' + error.description['message']
     return response
@@ -262,7 +262,7 @@ def get_locale():
     return request.accept_languages.best_match(LANGUAGES.keys())
 
 
-@app.route('/')
+@application.route('/')
 def index():
     page = request.args.get('page')
     if not page:
@@ -276,7 +276,7 @@ def index():
     try:
         aspect_uri = ROUTABLES[aspect]
     except KeyError as e:
-        app.logger.error("Caught exception : {}".format(e))
+        application.logger.error("Caught exception : {}".format(e))
         aspect_uri = ROUTABLES['MicroThesaurus']
 
     results = []
@@ -320,14 +320,14 @@ def index():
         pagination=pagination)
 
 
-@app.route('/term')
+@application.route('/term')
 def term():
     page = request.args.get('page', '1')
     preferred_language = request.args.get('lang', 'en')
     uri_anchor = request.args.get('uri_anchor')
     base_uri = request.args.get('base_uri')
     if not base_uri:
-        app.logger.error("Forgot to pass base uri to term view!")
+        application.logger.error("Forgot to pass base uri to term view!")
         abort(404)
 
     uri = base_uri
@@ -354,16 +354,16 @@ def term():
         pagination=pagination)
 
 
-@app.route('/search')
+@application.route('/search')
 def search():
     import unicodedata
     query = request.args.get('q', None)
     if not query:
-        app.logger.error("Forgot to pass query to search view!")
+        application.logger.error("Forgot to pass query to search view!")
         abort(500)
     preferred_language = request.args.get('lang', None)
     if not preferred_language:
-        app.logger.error("No language set in search view!")
+        application.logger.error("No language set in search view!")
         abort(500)
     page = request.args.get('page', '1')
 
@@ -397,7 +397,7 @@ def search():
         pagination=pagination)
 
 
-@app.route('/autocomplete')
+@application.route('/autocomplete')
 def autocomplete():
     q = request.args.get('q', None)
     preferred_language = request.args.get('lang', None)
@@ -428,7 +428,7 @@ def autocomplete():
     return Response(json.dumps(results), content_type='application/json')
 
 
-@app.route('/api', methods=['GET', 'POST'])
+@application.route('/api', methods=['GET', 'POST'])
 def serialize_data():
     base_uri = request.form.get('base_uri')
     uri_anchor = request.form.get('uri_anchor')
@@ -565,7 +565,7 @@ def query_es(query, lang, max_hits):
     the preferred language
     boost preferred label
     """
-    app.logger.debug("Match {} against labels_{} and alt_labels_{}".format(query, lang, lang))
+    application.logger.debug("Match {} against labels_{} and alt_labels_{}".format(query, lang, lang))
     dsl_q = """
      {
        "query": {
@@ -581,6 +581,6 @@ def query_es(query, lang, max_hits):
 
 # Additional contextual routes. Add a new one for each context you want to route.
 # See the contents of templates/thesaurus.html for an example of how to resolve the routing.
-@app.route('/thesaurus')
+@application.route('/thesaurus')
 def thesuarus_fragment():
     return render_template('thesaurus.html')
