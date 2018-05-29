@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if lang == 'ar' %}
+  {% set direction = "rtl" -%}
+{% else %}
+  {% set direction = "ltr" -%}
+{% endif %}
+
+<div class="row">
+    <div class="col-md-12">
+        <h5> {{ _('Version')}}:{{ version.0 }}</h5>
+    </div>
+    <div class="col-md-12">
+        <h5> {{_('Created')}}: {{ created.0 }}</h5>
+    </div>
+
+    <div class="col-md-12">
+        <h5>{{_('Description')}}:</h5> 
+        {% autoescape false %}
+            <p dir={{direction}}>{{ description.0 | replace("\n", "<br/>") }}</p>
+        {% endautoescape %}
+    </div>
+
+    <div class="col-md-12">
+        <table class="table table-condensed">
+            <th>{{_('Children')}}</th>
+                {% for elem in has_part %}
+                    {% set uri_parts = elem.link.split('#') %}
+                    <tr>
+                        <td dir={{direction}} style="border-top: none">
+                           <a href="/term?lang={{lang}}&base_uri={{uri_parts.0}}&uri_anchor={{uri_parts.1}}"> {{ elem.label }}</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+        </table>
+    </div>
+</div>
+
+{%endblock%}
