@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2018-05-18 16:23-0400\n"
-"PO-Revision-Date: 2018-05-18 16:25-0400\n"
+"POT-Creation-Date: 2018-05-29 15:37-0400\n"
+"PO-Revision-Date: 2018-05-29 15:38-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
 "Language-Team: fr <LL@li.org>\n"
@@ -39,22 +39,26 @@ msgid "Contact"
 msgstr ""
 
 #: templates/base.html:136
-msgid "Copyright"
-msgstr ""
-
-#: templates/base.html:137
-msgid "Fraud Alert"
+msgid "About"
 msgstr ""
 
 #: templates/base.html:138
-msgid "Privacy Notice"
+msgid "Copyright"
 msgstr ""
 
 #: templates/base.html:139
-msgid "A-Z Site Index"
+msgid "Fraud Alert"
 msgstr ""
 
 #: templates/base.html:140
+msgid "Privacy Notice"
+msgstr ""
+
+#: templates/base.html:141
+msgid "A-Z Site Index"
+msgstr ""
+
+#: templates/base.html:142
 msgid "Terms of Use"
 msgstr ""
 
@@ -66,6 +70,22 @@ msgstr ""
 #: templates/index.html:28 templates/index.html:74 templates/search.html:21
 #: templates/search.html:67 templates/term.html:22
 msgid "Next"
+msgstr ""
+
+#: templates/root.html:12
+msgid "Version"
+msgstr ""
+
+#: templates/root.html:15
+msgid "Created"
+msgstr ""
+
+#: templates/root.html:19
+msgid "Description"
+msgstr ""
+
+#: templates/root.html:27
+msgid "Children"
 msgstr ""
 
 #: templates/term.html:62

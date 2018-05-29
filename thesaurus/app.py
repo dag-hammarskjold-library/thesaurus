@@ -80,6 +80,12 @@ class Pagination:
 
 
 class Term:
+    """
+    Used by:
+        serialize method
+        term view
+        root view
+    """
     def __init__(self, concept, lang=None):
         """
         @concept in a concept URI, e.g.
@@ -91,6 +97,35 @@ class Term:
         """
         self.concept = concept
         self.lang = lang
+
+    # def _graph_query(self, property_name):
+    #     prop_a = []
+    #     # objs = graph.objects(subject=URIRef(self.concept), predicate=DCTERMS.created)
+    #     q = "select ?x where { <%s> <%s> ?x .}" % (self.uri, property_name)
+    #     res = graph.query(q)
+    #     for r in res:
+    #         if self.lang:
+    #             if r.language == self.lang:
+    #                 prop_a.append(r)
+    #         else:
+    #             prop_a.append(r)
+    #     return prop_a
+
+    # def __getattr__(self, name):
+    #     if name == 'version':
+    #         version = self._graph_query("dcterms:hasVersion")
+    #         return version
+    #     elif name == 'created':
+    #         created = self._graph_query("dcterms:created")
+    #         return created
+    #     elif name == 'description':
+    #         description = self._graph_query("dcterms:description")
+    #         return description
+    #     elif name == 'part':
+    #         part = self._graph_query("dcterms:hasPart")
+    #         return part
+    #     else:
+    #         return None
 
     @property
     def preferred_language(self):
@@ -250,6 +285,32 @@ class Term:
             labels.append(graph.preferredLabel(URIRef(self.concept), lang=lang))
         return labels
 
+    def version(self):
+        vers_a = []
+        for v in graph.objects(subject=URIRef(self.concept), predicate=DCTERMS.hasVersion):
+            vers_a.append(v)
+        return vers_a
+
+    def created(self):
+        c_a = []
+        for c in graph.objects(subject=URIRef(self.concept), predicate=DCTERMS.created):
+            c_a.append(c)
+        return c_a
+
+    def description(self, lang):
+        d_a = []
+        for d in graph.objects(subject=URIRef(self.concept), predicate=DCTERMS.description):
+            if d.language == lang:
+                d_a.append(d)
+        return d_a
+
+    def has_part(self):
+        p_a = []
+        for l in graph.objects(subject=URIRef(self.concept), predicate=DCTERMS.hasPart):
+            label = get_preferred_label(l, self.lang)
+            p_a.append({"link": l, "label": label})
+        return p_a
+
 
 @application.errorhandler(400)
 def custom400(error):
@@ -354,6 +415,28 @@ def term():
         pagination=pagination)
 
 
+@application.route('/root')
+def root():
+    preferred_language = request.args.get('lang', 'en')
+    uri_anchor = request.args.get('uri_anchor')
+    base_uri = request.args.get('base_uri')
+    if not base_uri:
+        application.logger.error("Forgot to pass base uri to term view!")
+        abort(404)
+
+    uri = base_uri
+    if uri_anchor:
+        uri = base_uri + '#' + uri_anchor
+    term = Term(uri, lang=preferred_language)
+    return render_template('root.html',
+        description=term.description(preferred_language),
+        has_part=term.has_part(),
+        version=term.version(),
+        created=term.created(),
+        lang=preferred_language
+    )
+
+
 @application.route('/search')
 def search():
     import unicodedata
@@ -426,6 +509,13 @@ def autocomplete():
         })
 
     return Response(json.dumps(results), content_type='application/json')
+
+
+# Additional contextual routes. Add a new one for each context you want to route.
+# See the contents of templates/thesaurus.html for an example of how to resolve the routing.
+@application.route('/thesaurus')
+def thesuarus_fragment():
+    return render_template('thesaurus.html')
 
 
 @application.route('/api', methods=['GET', 'POST'])
@@ -577,10 +667,3 @@ def query_es(query, lang, max_hits):
      }""" % (query, lang, lang)
     match = es.search(index='thesaurus', body=dsl_q, size=max_hits)
     return match
-
-
-# Additional contextual routes. Add a new one for each context you want to route.
-# See the contents of templates/thesaurus.html for an example of how to resolve the routing.
-@application.route('/thesaurus')
-def thesuarus_fragment():
-    return render_template('thesaurus.html')
