@@ -7,7 +7,7 @@ from rdflib.store import Store
 from rdflib.namespace import SKOS
 from rdflib_sqlalchemy import registerplugins
 from flask import Flask
-from flask import render_template, abort, request, Response, send_file
+from flask import render_template, abort, request, Response, send_file, redirect
 from .config import DevelopmentConfig
 from elasticsearch import Elasticsearch
 from flask_babel import Babel
@@ -43,7 +43,8 @@ ROUTABLES = {
     'ConceptScheme': SKOS.ConceptScheme,
     'Domain': EU.Domain,
     'MicroThesaurus': EU.MicroThesaurus,
-    'GeorgraphicTerm': UNVOC.GeographicTerm
+    'GeorgraphicTerm': UNVOC.GeographicTerm,
+    'RootContainer': UNVOC.RootContainer
 }
 
 
@@ -515,7 +516,11 @@ def autocomplete():
 # See the contents of templates/thesaurus.html for an example of how to resolve the routing.
 @application.route('/thesaurus')
 def thesuarus_fragment():
-    return render_template('thesaurus.html')
+    preferred_language = request.args.get('lang', 'en')
+    #uri_anchor = request.args.get('uri_anchor')
+    #base_uri = request.args.get('base_uri')
+    return redirect('/root?lang=' + preferred_language + '&base_uri=http://metadata.un.org/thesaurus&uri_anchor=00')
+    #return render_template('thesaurus.html')
 
 
 @application.route('/api', methods=['GET', 'POST'])
