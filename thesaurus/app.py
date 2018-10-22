@@ -519,8 +519,8 @@ def thesuarus_fragment():
     preferred_language = request.args.get('lang', 'en')
     #uri_anchor = request.args.get('uri_anchor')
     #base_uri = request.args.get('base_uri')
-    return redirect('/root?lang=' + preferred_language + '&base_uri=http://metadata.un.org/thesaurus&uri_anchor=00')
-    #return render_template('thesaurus.html')
+    #return redirect('/root?lang=' + preferred_language + '&base_uri=http://metadata.un.org/thesaurus&uri_anchor=00')
+    return render_template('thesaurus.html')
 
 
 @application.route('/api', methods=['GET', 'POST'])
