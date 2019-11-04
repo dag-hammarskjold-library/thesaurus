@@ -49,7 +49,7 @@ PyYAML==3.12
 rdflib==4.2.2
 rdflib-sqlalchemy==0.3.8
 redis==2.10.6
-requests==2.18.4
+requests==2.20.0
 s3transfer==0.1.13
 simplegeneric==0.8.1
 six==1.11.0
